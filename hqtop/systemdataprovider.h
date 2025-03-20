@@ -21,6 +21,7 @@ public:
     // 杀死进程
     virtual bool killProcess(int pid) = 0;
 
+
     // 析构函数
     virtual ~SystemDataProvider() = default;
 
