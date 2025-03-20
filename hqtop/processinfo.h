@@ -11,7 +11,7 @@ public:
     explicit ProcessInfo(QObject *parent = nullptr);
 
 
-    // toJson() 方法，供日志模块使用 后续补充
+    // toJson() 方法 供日志模块使用 后续补充
 
 signals:
 
