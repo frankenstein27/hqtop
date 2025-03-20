@@ -3,7 +3,7 @@
 
 #include <QString>
 #include <QSharedPointer>
-#include "./spdlog/include/spdlog/spdlog.h"
+#include "spdlog/spdlog.h"
 
 
 class Logger
