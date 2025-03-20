@@ -3,7 +3,7 @@
 
 #include "systemdataprovider.h"
 
-// 实现 Linux 平台的
+// 实现 Linux 平台 获取相关数据
 class LinuxDataProvider : public SystemDataProvider
 {
 public:
