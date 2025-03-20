@@ -24,9 +24,6 @@ SystemResource LinuxDataProvider::getSystemResource()
 bool LinuxDataProvider::killProcess(int pid)
 {
     // 具体逻辑后续实现
-    if(pid)
-        /* .... */
-        return true;
 
     return false;
 }
