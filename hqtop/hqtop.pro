@@ -16,13 +16,36 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    datacollector.cpp \
+    linuxdataprovider.cpp \
+    logger.cpp \
     main.cpp \
+    processinfo.cpp \
+    processmanager.cpp \
+    processtablemodel.cpp \
+    resourceanalyzer.cpp \
+    resourcewidget.cpp \
+    setting.cpp \
+    systemdataprovider.cpp \
+    systemresource.cpp \
     widget.cpp
 
 HEADERS += \
+    datacollector.h \
+    linuxdataprovider.h \
+    logger.h \
+    processinfo.h \
+    processmanager.h \
+    processtablemodel.h \
+    resourceanalyzer.h \
+    resourcewidget.h \
+    setting.h \
+    systemdataprovider.h \
+    systemresource.h \
     widget.h
 
 FORMS += \
+    resourcewidget.ui \
     widget.ui
 
 TRANSLATIONS += \
