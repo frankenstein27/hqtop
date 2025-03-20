@@ -15,9 +15,10 @@ public:
     void filterByName(QString name);
     void killProcess(qint64 pid);
 
+    QList<ProcessInfo> *getProcesses();
 
 private:
-    QList<ProcessInfo> processes;
+    QList<ProcessInfo> *processes;
     qint64 sortColumn;
     // 排序方式 ascendingOrder表示升序 descendingOrder表示降序
     Qt::SortOrder m_sortOrder = Qt::AscendingOrder;

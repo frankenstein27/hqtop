@@ -3,6 +3,9 @@
 
 #include <QWidget>
 
+#include "datacollector.h"
+#include "resourcewidget.h"
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
 QT_END_NAMESPACE
@@ -15,7 +18,15 @@ public:
     Widget(QWidget *parent = nullptr);
     ~Widget();
 
+    void updateProcessList();
+private slots:
+    void on_killPushButton_Clicked();
+
 private:
     Ui::Widget *ui;
+
+
+    DataCollector *dataCollector;
+    ResourceWidget * resourceWidget;
 };
 #endif // WIDGET_H

@@ -13,3 +13,7 @@ Widget::~Widget()
     delete ui;
 }
 
+void Widget::updateProcessList()
+{
+
+}
