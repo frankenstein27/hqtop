@@ -5,6 +5,8 @@
 
 #include "datacollector.h"
 #include "resourcewidget.h"
+#include "systemdataprovider.h"
+#include "linuxdataprovider.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
@@ -24,6 +26,7 @@ private slots:
 
 private:
     Ui::Widget *ui;
+
 
 
     DataCollector *dataCollector;

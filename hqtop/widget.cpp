@@ -6,6 +6,11 @@ Widget::Widget(QWidget *parent)
     , ui(new Ui::Widget)
 {
     ui->setupUi(this);
+
+    SystemDataProvider *m_linuxDataProvider = new LinuxDataProvider;
+
+
+
 }
 
 Widget::~Widget()
