@@ -22,11 +22,11 @@ public:
 
     void updateProcessList();
 private slots:
-    void on_killPushButton_Clicked();
+
+    void on_testPushButton_clicked();
 
 private:
     Ui::Widget *ui;
-
 
 
     DataCollector *dataCollector;

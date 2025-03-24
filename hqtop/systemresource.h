@@ -13,7 +13,7 @@ public:
 
     // 由于 QObject 的拷贝构造函数被禁用，SystemDataProvider 的 getSystemResource 函数
     // 无法返回 Systemesource 类型的值，故需要重写 本类的拷贝构造函数
-    SystemResource(const SystemResource& sRes)
+    SystemResource(const SystemResource& sRes) : QObject(nullptr)
     {
         this->cpuTotal = sRes.cpuTotal;
         this->memoryTotal = sRes.memoryTotal;

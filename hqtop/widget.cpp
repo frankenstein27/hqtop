@@ -7,9 +7,8 @@ Widget::Widget(QWidget *parent)
 {
     ui->setupUi(this);
 
-    SystemDataProvider *m_linuxDataProvider = new LinuxDataProvider;
-
-
+    SystemDataProvider *m_LinuxDataProvider = new LinuxDataProvider;
+    m_LinuxDataProvider->getProcessList();
 
 }
 
@@ -19,6 +18,11 @@ Widget::~Widget()
 }
 
 void Widget::updateProcessList()
+{
+
+}
+
+void Widget::on_testPushButton_clicked()
 {
 
 }

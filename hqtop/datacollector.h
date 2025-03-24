@@ -27,8 +27,8 @@ private:
     SystemDataProvider *provider;
     bool running = false;
     QTime* m_timmer;
-    // QList<ProcessInfo> processes;
-
+    QList<ProcessInfo> m_processes;
+    SystemResource m_sysResource;
 };
 
 #endif // DATACOLLECTOR_H
