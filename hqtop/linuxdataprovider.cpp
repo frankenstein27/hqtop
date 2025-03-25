@@ -37,10 +37,15 @@ QList<ProcessInfo> LinuxDataProvider::getProcessList()
     QString path;
     int pid;
     QFile file;
-    for(int i = 0; i < this->processIDs->size(); ++i)
+    int processNum = this->processIDs->size();
+
+    double proCpuTimeOld[processNum],proCpuTimeNew[processNum];
+
+    for(int i = 0; i < processNum; ++i)
     {
         pid = this->processIDs->at(i);
         QString basePath = "/proc/" + QString::number(pid);
+        // 1.读取status文件
         QString statusFile = basePath + "/status";
         file.setFileName(statusFile);
         if(!file.open(QFile::ReadOnly | QFile::Text))
@@ -51,14 +56,78 @@ QList<ProcessInfo> LinuxDataProvider::getProcessList()
         {
             QTextStream in(&file);
             QString lineMsg;
-            do {
+            for(int k = 0; k < 9; ++k)
+            {
                 lineMsg = in.readLine();
-                printf("lineMsg: %s\n",lineMsg.toStdString().c_str());
-            } while (!in.atEnd());
+                if(k == 8)
+                {
+                    if(lineMsg.startsWith("Uid:"))
+                    {   // 此处只获得了 用户 id 需要在 /etc/passwd 文件中转换为用户名
+                        QStringList uid = lineMsg.mid(5).split('\t');
+                        processinfo.setUser(uid[0]);
+                    }
+                }
+            }
             file.close();
         }
-
+        // 2.读取stat文件
+        QString statFile = basePath + "/stat";
+        file.setFileName(statFile);
+        if(!file.open(QFile::ReadOnly | QFile::Text))
+        {
+            qDebug() << "open file " << statFile << "wrong!";
+        }
+        else
+        {
+            QTextStream in(&file);
+            QString msg = in.readAll();
+            QStringList msgList = msg.split(' ');
+            processinfo.setPid(msgList[0].toInt());                     // pid
+            processinfo.setName(msgList[1].remove('(').remove(')'));    // name
+            processinfo.setMemoryUsage(msgList[23].toInt() * 4);        // memory
+            processinfo.setState(msgList[2]);                           // state
+            // cpu 占用率（百分比） --- 两次采样---  第一次
+            proCpuTimeOld[i] = msgList[13].toDouble() +
+                    msgList[14].toDouble() +
+                    msgList[15].toDouble() +
+                    msgList[16].toDouble();
+            file.close();
+        }
     }
+    QThread::msleep(10000);
+
+    // 在此处开启多线程 读取cpu总时间
+
+    for(int i = 0; i < processNum; ++i)
+    {
+        pid = this->processIDs->at(i);
+        QString statFile = "/proc/" + QString::number(pid) + "/stat";
+        file.setFileName(statFile);
+        if(!file.open(QFile::ReadOnly | QFile::Text))
+        {
+            qDebug() << "open file " << statFile << "wrong!";
+        }
+        else
+        {
+            QTextStream in(&file);
+            QString msg = in.readAll();
+            QStringList msgList = msg.split(' ');
+            // cpu 占用率（百分比） --- 两次采样---  第二次
+            proCpuTimeNew[i] = msgList[13].toDouble() +
+                    msgList[14].toDouble() +
+                    msgList[15].toDouble() +
+                    msgList[16].toDouble();
+            double cpuUsed = proCpuTimeNew[i] - proCpuTimeOld[i];
+
+            if(i == processNum - 1)
+            {
+                qDebug() << "cpuUsed: "<< cpuUsed;
+            }
+
+            file.close();
+        }
+    }
+
 
     return processesInfo;
 }

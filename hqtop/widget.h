@@ -2,11 +2,14 @@
 #define WIDGET_H
 
 #include <QWidget>
+#include <QDebug>
+#include <QThread>
 
 #include "datacollector.h"
 #include "resourcewidget.h"
 #include "systemdataprovider.h"
 #include "linuxdataprovider.h"
+#include "worker.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
@@ -27,7 +30,6 @@ private slots:
 
 private:
     Ui::Widget *ui;
-
 
     DataCollector *dataCollector;
     ResourceWidget * resourceWidget;

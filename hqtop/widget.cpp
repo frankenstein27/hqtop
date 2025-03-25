@@ -7,8 +7,25 @@ Widget::Widget(QWidget *parent)
 {
     ui->setupUi(this);
 
+
+
+
+    Worker getCpuTotalTimeworker;
+    QThread *getCpuTotalTimeThread = new QThread;
+
+    getCpuTotalTimeworker.moveToThread(getCpuTotalTimeThread);
+    connect(getCpuTotalTimeThread, &QThread::started,
+                &getCpuTotalTimeworker, &Worker::work_getTotalCpuTime);
+    getCpuTotalTimeThread->start();
+
+    qDebug() << SystemResource::getCpuNum();
+
     SystemDataProvider *m_LinuxDataProvider = new LinuxDataProvider;
     m_LinuxDataProvider->getProcessList();
+
+
+
+
 
 }
 

@@ -13,6 +13,21 @@ public:
 
     // toJson() 方法 供日志模块使用 后续补充
 
+
+
+    qint64 getPid();
+    void setPid(qint64 pid);
+    QString getName();
+    void setName(QString name);
+    double getCpuUsage();
+    void setCpuUsage(double CpuUge);
+    qint64 getMemoryUsage();
+    void setMemoryUsage(qint64 memUsage);
+    QString getUser();
+    void setUser(QString user);
+    QString getState();
+    void setState(QString state);
+
 signals:
 
 private:
