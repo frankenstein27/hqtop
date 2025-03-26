@@ -4,71 +4,52 @@ SystemResource::SystemResource(QObject *parent) : QObject(parent)
 {
 
 }
-qint64 SystemResource::cpuNum = 0;
-qint64 SystemResource::getCpuNum()
+
+double SystemResource::getCpuTotal() const
 {
-    if(SystemResource::cpuNum)
-        return SystemResource::cpuNum;
-    else
-    {
-        QFile file;
-        file.setFileName("/proc/cpuinfo");
-        if(!file.open(QFile::ReadOnly | QFile::Text))
-        {
-            qDebug() << "open file /proc/cpuinfo wrong!";
-        }
-        else
-        {
-            QTextStream in(&file);
-            QString lineMsg;
-            do
-            {
-                lineMsg = in.readLine();
-                if(lineMsg.startsWith("processor"))
-                    SystemResource::cpuNum++;
-            }
-            while(!in.atEnd());
-            file.close();
-            return SystemResource::cpuNum;
-        }
-        return SystemResource::cpuNum;
-    }
+    return this->cpuTotal;
 }
-double SystemResource::getCpuTotalTime()
+void SystemResource::setCpuTotal(double cpuTotal)
 {
-    double totalCpuOld = 0,totalCpuNew = 0;
-    QFile cpuFile;
-    cpuFile.setFileName("/proc/stat");
-    if(!cpuFile.open(QFile::ReadOnly | QFile::Text))
-    {
-        qDebug() << "open file /proc/stat wrong!";
-    }
-    else
-    {
-        QTextStream cpuIn(&cpuFile);
-        QStringList cpuList = cpuIn.readLine().split(' ');
-        for(int l = 2; l < cpuList.size(); ++l)
-        {
-            totalCpuOld += cpuList[l].toDouble();
-        }
-        qDebug() << "totalCpuOld: " << totalCpuOld;
-        cpuFile.close();
-    }
-    QThread::msleep(800);
-    if(!cpuFile.open(QFile::ReadOnly | QFile::Text))
-    {
-        qDebug() << "open file /proc/stat wrong!";
-    }
-    else
-    {
-        QTextStream cpuIn(&cpuFile);
-        QStringList cpuList = cpuIn.readLine().split(' ');
-        for(int l = 2; l < cpuList.size(); ++l)
-        {
-            totalCpuNew += cpuList[l].toDouble();
-        }
-        qDebug() << "totalCpuNew: " << totalCpuNew;
-        cpuFile.close();
-    }
-    return totalCpuNew - totalCpuOld;
+    this->cpuTotal = cpuTotal;
+}
+double SystemResource::getMemoryTotal() const
+{
+    return this->memoryTotal;
+}
+void SystemResource::setMemoryTotal(double memoryTotal)
+{
+    this->memoryTotal = memoryTotal;
+}
+double SystemResource::getMemoryUsed() const
+{
+    return this->memoryUsed;
+}
+void SystemResource::setMemoryUsed(double memoryUsed)
+{
+    this->memoryUsed = memoryUsed;
+}
+double SystemResource::getSwapTotal() const
+{
+    return this->swapTotal;
+}
+void SystemResource::setSwapTotal(double swapTotal)
+{
+    this->swapTotal = swapTotal;
+}
+double SystemResource::getSwapused() const
+{
+    return this->swapused;
+}
+void SystemResource::setSwapused(double swapused)
+{
+    this->swapused = swapused;
+}
+QString SystemResource::getUpTime() const
+{
+    return this->upTime;
+}
+void SystemResource::setUpTime(QString upTime)
+{
+    this->upTime = upTime;
 }

@@ -13,19 +13,6 @@
   <property name="windowTitle">
    <string>Widget</string>
   </property>
-  <widget class="QPushButton" name="testPushButton">
-   <property name="geometry">
-    <rect>
-     <x>460</x>
-     <y>240</y>
-     <width>121</width>
-     <height>61</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>测试按键</string>
-   </property>
-  </widget>
  </widget>
  <resources/>
  <connections/>

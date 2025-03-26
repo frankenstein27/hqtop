@@ -6,6 +6,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QTextStream>
+#include <QMap>
 
 #include "systemdataprovider.h"
 
@@ -19,13 +20,22 @@ public:
     LinuxDataProvider& operator=(const LinuxDataProvider &other);
 
     QList<ProcessInfo> getProcessList() override;
-    SystemResource getSystemResource() override;
+    SystemResource* getSystemResource() override;
     bool killProcess(int pid) override;
+    double* getCpuTotalTime() override;
+
+    qint64 getCpuNum();
+    qint64 cpuNum = 0;
+
 private:
     void getAllProcess();
 
+    QString formatTime(double temp);
+
 private:
     QList<qint64> *processIDs;
+    QMap<qint64,double> m_prevCpuTime;
+
 
 };
 

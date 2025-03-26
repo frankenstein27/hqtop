@@ -9,7 +9,9 @@
 #include "resourcewidget.h"
 #include "systemdataprovider.h"
 #include "linuxdataprovider.h"
-#include "worker.h"
+#include "processmanager.h"
+#include "resourceanalyzer.h"
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Widget; }
@@ -23,15 +25,15 @@ public:
     Widget(QWidget *parent = nullptr);
     ~Widget();
 
-    void updateProcessList();
 private slots:
 
-    void on_testPushButton_clicked();
 
 private:
     Ui::Widget *ui;
 
     DataCollector *dataCollector;
     ResourceWidget * resourceWidget;
+
+    bool isRunning;
 };
 #endif // WIDGET_H

@@ -9,13 +9,13 @@ LinuxDataProvider::~LinuxDataProvider()
     delete processIDs;                          // 释放
 }
 
-// 拷贝构造函数
+// 重载拷贝构造函数
 LinuxDataProvider::LinuxDataProvider(const LinuxDataProvider& other)
 {
     processIDs = new QList<qint64>(*other.processIDs);
 }
 
-// =赋值运算符
+// 重载=赋值运算符
 LinuxDataProvider& LinuxDataProvider::operator=(const LinuxDataProvider &other)
 {
     if(this != &other)
@@ -39,10 +39,11 @@ QList<ProcessInfo> LinuxDataProvider::getProcessList()
     QFile file;
     int processNum = this->processIDs->size();
 
-    double proCpuTimeOld[processNum],proCpuTimeNew[processNum];
+    double currentTime;
 
     for(int i = 0; i < processNum; ++i)
     {
+        currentTime = 0;
         pid = this->processIDs->at(i);
         QString basePath = "/proc/" + QString::number(pid);
         // 1.读取status文件
@@ -86,57 +87,102 @@ QList<ProcessInfo> LinuxDataProvider::getProcessList()
             processinfo.setName(msgList[1].remove('(').remove(')'));    // name
             processinfo.setMemoryUsage(msgList[23].toInt() * 4);        // memory
             processinfo.setState(msgList[2]);                           // state
-            // cpu 占用率（百分比） --- 两次采样---  第一次
-            proCpuTimeOld[i] = msgList[13].toDouble() +
+            // cpu 占用率（百分比） --- 两次采样---
+            currentTime = msgList[13].toDouble() +
                     msgList[14].toDouble() +
                     msgList[15].toDouble() +
                     msgList[16].toDouble();
-            file.close();
-        }
-    }
-    QThread::msleep(10000);
-
-    // 在此处开启多线程 读取cpu总时间
-
-    for(int i = 0; i < processNum; ++i)
-    {
-        pid = this->processIDs->at(i);
-        QString statFile = "/proc/" + QString::number(pid) + "/stat";
-        file.setFileName(statFile);
-        if(!file.open(QFile::ReadOnly | QFile::Text))
-        {
-            qDebug() << "open file " << statFile << "wrong!";
-        }
-        else
-        {
-            QTextStream in(&file);
-            QString msg = in.readAll();
-            QStringList msgList = msg.split(' ');
-            // cpu 占用率（百分比） --- 两次采样---  第二次
-            proCpuTimeNew[i] = msgList[13].toDouble() +
-                    msgList[14].toDouble() +
-                    msgList[15].toDouble() +
-                    msgList[16].toDouble();
-            double cpuUsed = proCpuTimeNew[i] - proCpuTimeOld[i];
-
-            if(i == processNum - 1)
-            {
-                qDebug() << "cpuUsed: "<< cpuUsed;
+            if(m_prevCpuTime.contains(pid))
+            {       // 如果缓存中有上次的数据
+                double prevTime = m_prevCpuTime[pid];
+                // 此处存放进程在间隔之中占用的cpu时间
+                processinfo.setCpuUsage(currentTime - prevTime);
             }
-
+            m_prevCpuTime[pid] = currentTime;
             file.close();
         }
+        processesInfo.append(processinfo);
     }
-
-
     return processesInfo;
 }
-SystemResource LinuxDataProvider::getSystemResource()
+SystemResource* LinuxDataProvider::getSystemResource()
 {
-    SystemResource sysRes;
-    // 具体逻辑后续实现
+    SystemResource *sysRes = new SystemResource;
+    // 先读取 总内存和已用内存
+    QFile file;
+    file.setFileName("/proc/meminfo");
+    if(!file.open(QFile::ReadOnly | QFile::Text))
+    {
+        qDebug() << "open file /proc/meminfo wrong!";
+    }
+    else
+    {
+        QTextStream in(&file);
+        QString lineMsg;
+        do
+        {
+            lineMsg = in.readLine();
+            if(lineMsg.startsWith("MemTotal:"))
+            {
+                int len = lineMsg.remove(' ').size();
+                double totalMemory = lineMsg.mid(9,len - 11).toDouble() / 1024 / 1024;
+                totalMemory = QString::number(totalMemory,'f',2).toDouble();
+                sysRes->setMemoryTotal(totalMemory);
+            }
+            else if(lineMsg.startsWith("MemAvailable:"))
+            {
+                int len = lineMsg.remove(' ').size();
+                double usedMemory = lineMsg.mid(13,len - 15).toDouble() / 1024 / 1024;
+                usedMemory = QString::number(usedMemory,'f',2).toDouble();
+                sysRes->setMemoryUsed(usedMemory);
+            }
+            else if(lineMsg.startsWith("SwapTotal:"))
+            {
+                int len1 = lineMsg.remove(' ').size();
+                // 处理 交换分区总量 -> 先转化为 double 型
+                double totalSwap = lineMsg.mid(10,len1 - 12).toDouble();
 
+                // 处理 交换分区总量 -> 先转化为 double 型
+                QString lineMsg2 = in.readLine();
+                int len2 = lineMsg2.remove(' ').size();
+                double freeSwap = lineMsg2.mid(13,len2 - 15).toDouble();
 
+                // 总量 - 空闲量 = 使用量
+                double usedSwap = totalSwap - freeSwap;
+
+                // totalSwap 的KB值用完 将其四舍五入 保留两位小数 转化为 GB 并存入sysRes中
+                totalSwap = totalSwap / 1024 / 1024;
+                totalSwap = QString::number(totalSwap,'f',2).toDouble();
+                sysRes->setMemoryTotal(totalSwap);
+
+                // 将 swapUsed 也四舍五入 保留两位小数 转化为 GB 也存入sysRes中
+                usedSwap = usedSwap / 1024 / 1024;
+                usedSwap = QString::number(usedSwap,'f',2).toDouble();
+                sysRes->setMemoryUsed(usedSwap);
+                file.close();
+                break;
+            }
+
+        }while(lineMsg != nullptr);
+        file.close();
+    }
+    file.setFileName("/proc/uptime");
+    if(!file.open(QFile::ReadOnly | QFile::Text))
+    {
+        qDebug() << "open file /proc/meminfo wrong!";
+    }
+    else
+    {
+        QTextStream in(&file);
+        QString lineMsg;
+        lineMsg = in.readAll();
+        double temp = lineMsg.split(' ')[0].toDouble();
+        QString upTime = this->formatTime(temp);
+        sysRes->setUpTime(upTime);
+//        qDebug() << "upTime: " << upTime;
+
+        file.close();
+    }
     return sysRes;
 }
 bool LinuxDataProvider::killProcess(int pid)
@@ -149,6 +195,7 @@ bool LinuxDataProvider::killProcess(int pid)
 
 void LinuxDataProvider::getAllProcess()
 {
+    this->processIDs->clear();
     // 指定目录
     QDir dir("/proc");
     // 判断目录是否存在
@@ -185,12 +232,81 @@ void LinuxDataProvider::getAllProcess()
     }
 }
 
+qint64 LinuxDataProvider::getCpuNum()
+{
+    if(this->cpuNum)
+        return this->cpuNum;
+    else
+    {
+        QFile file;
+        file.setFileName("/proc/cpuinfo");
+        if(!file.open(QFile::ReadOnly | QFile::Text))
+        {
+            qDebug() << "open file /proc/cpuinfo wrong!";
+        }
+        else
+        {
+            QTextStream in(&file);
+            QString lineMsg;
+            do
+            {
+                lineMsg = in.readLine();
+                if(lineMsg.startsWith("processor"))
+                    this->cpuNum++;
+            }
+            while(!in.atEnd());
+            file.close();
+            return this->cpuNum;
+        }
+        return this->cpuNum;
+    }
+}
+double* LinuxDataProvider::getCpuTotalTime()
+{
+    double *cpuInfo = new double[2];
+    double totalCpu = 0,idle = 0;
+    QFile cpuFile;
+    cpuFile.setFileName("/proc/stat");
+    if(!cpuFile.open(QFile::ReadOnly | QFile::Text))
+    {
+        qDebug() << "open file /proc/stat wrong!";
+    }
+    else
+    {
+        QTextStream cpuIn(&cpuFile);
+        QStringList cpuList = cpuIn.readLine().split(' ');
+        for(int l = 2; l < cpuList.size(); ++l)
+        {
+            if(l == 5)
+                idle = cpuList[l].toDouble();
+            totalCpu += cpuList[l].toDouble();
+        }
+        cpuFile.close();
+    }
+    cpuInfo[0] = totalCpu;
+    cpuInfo[1] = idle;
+    return cpuInfo;
+}
+QString LinuxDataProvider::formatTime(double temp)
+{
+    QString upTime;
+    int second = (int)temp++;
+    if(((int)temp*10) % 10 >=5)
+    {
+        second++;
+    }
+    int minInt = 60;
+    int hourInt = minInt * 60;
+    int dayInt = hourInt * 60;
 
-
-
-
-
-
+    int day = second / dayInt;
+    int hour = (second - day * dayInt) / hourInt;
+    int mintues = (second - day * dayInt - hour * hourInt) / minInt;
+    int seconds = (second - day * dayInt - hour * hourInt - mintues * minInt);
+    upTime = QString::number(day, 10) + "d " + QString::number(hour, 10) + ":" +
+                QString::number(mintues, 10) + ":" + QString::number(seconds, 10);
+    return upTime;
+}
 
 
 

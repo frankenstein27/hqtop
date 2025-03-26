@@ -17,9 +17,10 @@ public:
     // 获取进程列表（从/proc目录读取）
     virtual QList<ProcessInfo> getProcessList() = 0;
     // 获取系统总体资源
-    virtual SystemResource getSystemResource() = 0;
+    virtual SystemResource* getSystemResource() = 0;
     // 杀死进程
     virtual bool killProcess(int pid) = 0;
+    virtual double* getCpuTotalTime() = 0;
 
 
     // 析构函数

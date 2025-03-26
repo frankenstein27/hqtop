@@ -28,8 +28,7 @@ SOURCES += \
     setting.cpp \
     systemdataprovider.cpp \
     systemresource.cpp \
-    widget.cpp \
-    worker.cpp
+    widget.cpp
 
 HEADERS += \
     datacollector.h \
@@ -43,8 +42,7 @@ HEADERS += \
     setting.h \
     systemdataprovider.h \
     systemresource.h \
-    widget.h \
-    worker.h
+    widget.h
 
 FORMS += \
     resourcewidget.ui \

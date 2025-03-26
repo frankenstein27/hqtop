@@ -6,7 +6,7 @@
 #include <QDebug>
 #include <QTextStream>
 #include <QThread>
-
+#include <QVariant>
 
 // 系统总资源用量
 class SystemResource : public QObject
@@ -24,26 +24,38 @@ public:
         this->memoryUsed = sRes.memoryUsed;
         this->swapTotal = sRes.swapTotal;
         this->memoryUsed = sRes.memoryUsed;
+        this->upTime = sRes.upTime;
     }
-    static qint64 getCpuNum();
-
-    static double getCpuTotalTime();
+    double getCpuTotal() const;
+    void setCpuTotal(double cpuTotal);
+    double getMemoryTotal() const;
+    void setMemoryTotal(double memoryTotal);
+    double getMemoryUsed() const;
+    void setMemoryUsed(double memoryUsed);
+    double getSwapTotal() const;
+    void setSwapTotal(double swapTotal);
+    double getSwapused() const;
+    void setSwapused(double swapused);
+    QString getUpTime() const;
+    void setUpTime(QString upTime);
 
     // toJson() 方法供日志模块使用 后续补充
-    static qint64 cpuNum;
 signals:
 
 
 private:
     // 使用 Qt数据类型 qint64 保证跨平台兼容性
     double cpuTotal;        // 总CPU利用率
-    qint64 memoryTotal;     // 总内存用量（KB）
-    qint64 memoryUsed;      // 已用内存（KB）
-    qint64 swapTotal;       // 交换分区总量
-    qint64 swapused;        // 已用分区用量
-
+    double memoryTotal;     // 总内存用量（KB）
+    double memoryUsed;      // 已用内存（KB）
+    double swapTotal;       // 交换分区总量
+    double swapused;        // 已用分区用量
+    QString upTime;         // 启动时间
 
 
 };
+
+Q_DECLARE_METATYPE(SystemResource);
+
 
 #endif // SYSTEMRESOURCE_H
