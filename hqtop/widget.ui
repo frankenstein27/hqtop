@@ -13,6 +13,29 @@
   <property name="windowTitle">
    <string>Widget</string>
   </property>
+  <widget class="QPushButton" name="pushButton">
+   <property name="geometry">
+    <rect>
+     <x>670</x>
+     <y>540</y>
+     <width>111</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>PushButton</string>
+   </property>
+  </widget>
+  <widget class="QTableView" name="processesTableView">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>60</y>
+     <width>771</width>
+     <height>461</height>
+    </rect>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

@@ -11,6 +11,7 @@
 #include "linuxdataprovider.h"
 #include "processmanager.h"
 #include "resourceanalyzer.h"
+#include "processtablemodel.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -28,12 +29,22 @@ public:
 private slots:
 
 
+    void on_pushButton_clicked();
+
 private:
     Ui::Widget *ui;
-
+    // 系统接口层
+    SystemDataProvider *dataprovider;
+    // 数据采集层
     DataCollector *dataCollector;
-    ResourceWidget * resourceWidget;
+    // 业务逻辑层
+    ProcessManager *processmanager;
+    ResourceAnalyzer *resourceanalyzer;
+    // UI显示层
+    ProcessTableModel *myTableModel;
+    ResourceWidget *resourceWidget;
 
-    bool isRunning;
 };
 #endif // WIDGET_H
+
+

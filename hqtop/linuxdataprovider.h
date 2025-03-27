@@ -22,7 +22,6 @@ public:
     QList<ProcessInfo> getProcessList() override;
     SystemResource* getSystemResource() override;
     bool killProcess(int pid) override;
-    double* getCpuTotalTime() override;
 
     qint64 getCpuNum();
     qint64 cpuNum = 0;
@@ -34,8 +33,8 @@ private:
 
 private:
     QList<qint64> *processIDs;
-    QMap<qint64,double> m_prevCpuTime;
-
+    QMap<qint64,double> m_prevProcCpuTime;
+    double m_prevTotalCpu,m_prevIdleCpu,m_diffCpuTime;;
 
 };
 

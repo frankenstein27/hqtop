@@ -23,7 +23,7 @@ public:
         this->memoryTotal = sRes.memoryTotal;
         this->memoryUsed = sRes.memoryUsed;
         this->swapTotal = sRes.swapTotal;
-        this->memoryUsed = sRes.memoryUsed;
+        this->swapUsed = sRes.swapUsed;
         this->upTime = sRes.upTime;
     }
     double getCpuTotal() const;
@@ -34,8 +34,8 @@ public:
     void setMemoryUsed(double memoryUsed);
     double getSwapTotal() const;
     void setSwapTotal(double swapTotal);
-    double getSwapused() const;
-    void setSwapused(double swapused);
+    double getSwapUsed() const;
+    void setSwapUsed(double swapUsed);
     QString getUpTime() const;
     void setUpTime(QString upTime);
 
@@ -49,7 +49,7 @@ private:
     double memoryTotal;     // 总内存用量（KB）
     double memoryUsed;      // 已用内存（KB）
     double swapTotal;       // 交换分区总量
-    double swapused;        // 已用分区用量
+    double swapUsed;        // 已用分区用量
     QString upTime;         // 启动时间
 
 

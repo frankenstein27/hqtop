@@ -37,13 +37,14 @@ void SystemResource::setSwapTotal(double swapTotal)
 {
     this->swapTotal = swapTotal;
 }
-double SystemResource::getSwapused() const
+
+double SystemResource::getSwapUsed() const
 {
-    return this->swapused;
+    return this->swapUsed;
 }
-void SystemResource::setSwapused(double swapused)
+void SystemResource::setSwapUsed(double swapUsed)
 {
-    this->swapused = swapused;
+    this->swapUsed = swapUsed;
 }
 QString SystemResource::getUpTime() const
 {

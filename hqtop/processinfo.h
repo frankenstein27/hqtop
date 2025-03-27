@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QVariant>
 #include <QList>
+#include <QDebug>
 
 // 每个进程信息
 class ProcessInfo : public QObject
@@ -25,6 +26,7 @@ public:
     }
     ProcessInfo& operator=(const ProcessInfo &other)
     {
+        qDebug() << "ProcessInfo 深拷贝";
         if(this != &other)
         {   // 实现深拷贝
             this->pid = other.pid;

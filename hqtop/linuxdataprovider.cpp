@@ -3,6 +3,9 @@
 LinuxDataProvider::LinuxDataProvider()
 {
     this->processIDs = new QList<qint64>();     // 分配内存
+    this->m_prevIdleCpu = -1;
+    this->m_prevTotalCpu = -1;
+    this->m_diffCpuTime = -1;
 }
 LinuxDataProvider::~LinuxDataProvider()
 {
@@ -28,7 +31,6 @@ LinuxDataProvider& LinuxDataProvider::operator=(const LinuxDataProvider &other)
 QList<ProcessInfo> LinuxDataProvider::getProcessList()
 {
     QList<ProcessInfo> processesInfo;
-
     // 调用函数 获取当前进程目录名
     this->getAllProcess();
 
@@ -85,20 +87,26 @@ QList<ProcessInfo> LinuxDataProvider::getProcessList()
             QStringList msgList = msg.split(' ');
             processinfo.setPid(msgList[0].toInt());                     // pid
             processinfo.setName(msgList[1].remove('(').remove(')'));    // name
-            processinfo.setMemoryUsage(msgList[23].toInt() * 4);        // memory
+            processinfo.setMemoryUsage(msgList[23].toInt() * 4096 / 1000000);        // memory
             processinfo.setState(msgList[2]);                           // state
             // cpu 占用率（百分比） --- 两次采样---
             currentTime = msgList[13].toDouble() +
                     msgList[14].toDouble() +
                     msgList[15].toDouble() +
                     msgList[16].toDouble();
-            if(m_prevCpuTime.contains(pid))
-            {       // 如果缓存中有上次的数据
-                double prevTime = m_prevCpuTime[pid];
+            if(m_prevProcCpuTime.contains(pid) && -1 != m_diffCpuTime)
+            {   // 如果缓存中有上次的数据
+                double prevTime = m_prevProcCpuTime[pid];
                 // 此处存放进程在间隔之中占用的cpu时间
-                processinfo.setCpuUsage(currentTime - prevTime);
+                double processCpuTime = currentTime - prevTime;
+                double usage = (processCpuTime / m_diffCpuTime) * 100;
+                processinfo.setCpuUsage(usage);
             }
-            m_prevCpuTime[pid] = currentTime;
+            else
+            {
+                processinfo.setCpuUsage(0.00);
+            }
+            m_prevProcCpuTime[pid] = currentTime;
             file.close();
         }
         processesInfo.append(processinfo);
@@ -145,7 +153,7 @@ SystemResource* LinuxDataProvider::getSystemResource()
                 // 处理 交换分区总量 -> 先转化为 double 型
                 QString lineMsg2 = in.readLine();
                 int len2 = lineMsg2.remove(' ').size();
-                double freeSwap = lineMsg2.mid(13,len2 - 15).toDouble();
+                double freeSwap = lineMsg2.mid(9,len2 - 11).toDouble();
 
                 // 总量 - 空闲量 = 使用量
                 double usedSwap = totalSwap - freeSwap;
@@ -153,12 +161,12 @@ SystemResource* LinuxDataProvider::getSystemResource()
                 // totalSwap 的KB值用完 将其四舍五入 保留两位小数 转化为 GB 并存入sysRes中
                 totalSwap = totalSwap / 1024 / 1024;
                 totalSwap = QString::number(totalSwap,'f',2).toDouble();
-                sysRes->setMemoryTotal(totalSwap);
+                sysRes->setSwapTotal(totalSwap);
 
-                // 将 swapUsed 也四舍五入 保留两位小数 转化为 GB 也存入sysRes中
-                usedSwap = usedSwap / 1024 / 1024;
+                // 将 swapUsed 也四舍五入 保留两位小数 转化为 MB 也存入sysRes中
+                usedSwap = usedSwap / 1024;
                 usedSwap = QString::number(usedSwap,'f',2).toDouble();
-                sysRes->setMemoryUsed(usedSwap);
+                sysRes->setSwapUsed(usedSwap);
                 file.close();
                 break;
             }
@@ -181,6 +189,36 @@ SystemResource* LinuxDataProvider::getSystemResource()
         sysRes->setUpTime(upTime);
 //        qDebug() << "upTime: " << upTime;
 
+        file.close();
+    }
+    // 开始 采集 cpu 信息
+    double curTotalCpu = 0,curIdleCpu = 0;
+    file.setFileName("/proc/stat");
+    if(!file.open(QFile::ReadOnly | QFile::Text))
+    {
+        qDebug() << "open file /proc/stat wrong!";
+    }
+    else
+    {
+        QTextStream cpuIn(&file);
+        QStringList cpuList = cpuIn.readLine().split(' ');
+        for(int l = 2; l < cpuList.size(); ++l)
+        {
+            if(l == 5)
+                curIdleCpu = cpuList[l].toDouble();
+            curTotalCpu += cpuList[l].toDouble();
+        }
+        if(-1 != this->m_prevTotalCpu && -1 != this->m_prevIdleCpu)
+        {
+            double tmpCpuTotal = (1 - (curIdleCpu - m_prevIdleCpu)/(curTotalCpu - m_prevTotalCpu)) * 100;
+            m_diffCpuTime = curTotalCpu - this->m_prevTotalCpu;
+            QString str = QString::number(tmpCpuTotal, 'f', 2);
+            sysRes->setCpuTotal(str.toDouble());
+        }
+        else
+            sysRes->setCpuTotal(0.00);
+        this->m_prevIdleCpu = curIdleCpu;
+        this->m_prevTotalCpu = curTotalCpu;
         file.close();
     }
     return sysRes;
@@ -261,6 +299,9 @@ qint64 LinuxDataProvider::getCpuNum()
         return this->cpuNum;
     }
 }
+
+//  已经废弃的获取 cpu 时间函数
+/*
 double* LinuxDataProvider::getCpuTotalTime()
 {
     double *cpuInfo = new double[2];
@@ -287,25 +328,33 @@ double* LinuxDataProvider::getCpuTotalTime()
     cpuInfo[1] = idle;
     return cpuInfo;
 }
+*/
+
 QString LinuxDataProvider::formatTime(double temp)
 {
-    QString upTime;
     int second = (int)temp++;
     if(((int)temp*10) % 10 >=5)
     {
         second++;
     }
     int minInt = 60;
-    int hourInt = minInt * 60;
-    int dayInt = hourInt * 60;
+    int hourInt = 3600;
+    int dayInt = 86400;
 
     int day = second / dayInt;
-    int hour = (second - day * dayInt) / hourInt;
-    int mintues = (second - day * dayInt - hour * hourInt) / minInt;
-    int seconds = (second - day * dayInt - hour * hourInt - mintues * minInt);
-    upTime = QString::number(day, 10) + "d " + QString::number(hour, 10) + ":" +
-                QString::number(mintues, 10) + ":" + QString::number(seconds, 10);
-    return upTime;
+    int remaining = second % dayInt;
+
+    int hour = remaining / hourInt;
+    remaining %= hourInt;
+
+    int minutes = remaining / minInt;
+
+    int seconds = remaining % minInt;
+    return QString("%L1d %2:%3:%4")
+            .arg(day)
+            .arg(hour, 2, 10, QLatin1Char('0'))
+            .arg(minutes, 2, 10, QLatin1Char('0'))
+            .arg(seconds, 2, 10, QLatin1Char('0'));
 }
 
 

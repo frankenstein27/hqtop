@@ -20,7 +20,6 @@ public:
     virtual SystemResource* getSystemResource() = 0;
     // 杀死进程
     virtual bool killProcess(int pid) = 0;
-    virtual double* getCpuTotalTime() = 0;
 
 
     // 析构函数

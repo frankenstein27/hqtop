@@ -28,7 +28,8 @@ SOURCES += \
     setting.cpp \
     systemdataprovider.cpp \
     systemresource.cpp \
-    widget.cpp
+    widget.cpp \
+    worker.cpp
 
 HEADERS += \
     datacollector.h \
@@ -42,7 +43,8 @@ HEADERS += \
     setting.h \
     systemdataprovider.h \
     systemresource.h \
-    widget.h
+    widget.h \
+    worker.h
 
 FORMS += \
     resourcewidget.ui \
@@ -50,6 +52,8 @@ FORMS += \
 
 TRANSLATIONS += \
     hqtop_zh_CN.ts
+OTHER_FILES += \
+    待办.txt
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
