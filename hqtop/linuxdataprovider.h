@@ -32,6 +32,9 @@ private:
     QString formatTime(double temp);
 
 private:
+    bool isGetToalMem;
+    double totalMemoryInKiloBytes;
+
     QList<qint64> *processIDs;
     QMap<qint64,double> m_prevProcCpuTime;
     double m_prevTotalCpu,m_prevIdleCpu,m_diffCpuTime;;

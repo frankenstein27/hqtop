@@ -27,9 +27,10 @@ public:
     ~Widget();
 
 private slots:
+    void onSystemResourceUpdate(SystemResource newSystemResource);
 
 
-    void on_pushButton_clicked();
+    void on_testPushButton_clicked();
 
 private:
     Ui::Widget *ui;

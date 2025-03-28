@@ -26,7 +26,6 @@ public:
     }
     ProcessInfo& operator=(const ProcessInfo &other)
     {
-        qDebug() << "ProcessInfo 深拷贝";
         if(this != &other)
         {   // 实现深拷贝
             this->pid = other.pid;

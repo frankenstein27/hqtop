@@ -22,10 +22,17 @@ void ResourceAnalyzer::getMemoryHistory()
 
 void ResourceAnalyzer::handleSystemResourceUpdate(const SystemResource& sysRes)
 {
-    qDebug() << "CPUTotal:" << sysRes.getCpuTotal() << "memoryTotal:" << sysRes.getMemoryTotal() <<
-                "memoryUsed:" << sysRes.getMemoryUsed() << "swapTotal:" << sysRes.getSwapTotal() <<
-                "swapUsed:" << sysRes.getSwapUsed() << "upTime:" << sysRes.getUpTime();
+    this->history.enqueue(sysRes);
+    if(this->history.size() > SYSRESOUCE_SZ)
+    {
+        this->history.dequeue();
+    }
+    // 发送整个队列到 resourceAnalyzer
+    // emit systemResourceUpdate(this->history);
+    emit systemResourceUpdate(this->history.back());
+}
 
-//    qDebug() << "ResourceAnalyzer::handleSystemResourceUpdate";
-
+SystemResource& ResourceAnalyzer::getLatestSystemResource()
+{
+    return this->history.back();
 }

@@ -26,6 +26,22 @@ public:
         this->swapUsed = sRes.swapUsed;
         this->upTime = sRes.upTime;
     }
+    // 重写 = 赋值运算符
+    SystemResource& operator=(const SystemResource& other)
+    {
+        if(this != &other)
+        {
+            this->cpuTotal = other.cpuTotal;
+            this->memoryTotal = other.memoryTotal;
+            this->memoryUsed = other.memoryUsed;
+            this->swapTotal = other.swapTotal;
+            this->swapUsed = other.swapUsed;
+            this->upTime = other.upTime;
+        }
+        return *this;
+    }
+
+
     double getCpuTotal() const;
     void setCpuTotal(double cpuTotal);
     double getMemoryTotal() const;

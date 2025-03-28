@@ -2,10 +2,9 @@
 
 DataCollector::DataCollector(SystemDataProvider *provider,QObject *parent) :
     m_provider(provider)
-{qDebug() << "111 工作线程ID:" << QThread::currentThreadId();
+{
     this->moveToThread(&m_workerThread);
 
-    qDebug() << "222 工作线程ID:" << QThread::currentThreadId();
 }
 
 
@@ -17,7 +16,7 @@ DataCollector::~DataCollector()
 }
 
 void DataCollector::startCollection(int intervalMs)
-{qDebug() << "333 工作线程ID:" << QThread::currentThreadId();
+{
     m_workerThread.start();
     if(!m_running)
     {

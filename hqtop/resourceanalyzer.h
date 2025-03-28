@@ -2,9 +2,12 @@
 #define RESOURCEANALYZER_H
 
 #include <QObject>
-#include <QVector>
+#include <QQueue>
 
 #include "systemresource.h"
+
+
+#define SYSRESOUCE_SZ 60
 
 // 系统总量分析 类
 class ResourceAnalyzer : public QObject
@@ -22,11 +25,18 @@ public:
     // 获取内存历史数据
     void getMemoryHistory();
     // ...
+
+    SystemResource& getLatestSystemResource();
 public slots:
     void handleSystemResourceUpdate(const SystemResource& sysRes);
 
+
+signals:
+    void systemResourceUpdate(SystemResource newSystemResource);
+//    void systemResourceUpdate(QQueue<SystemResource> newSystemResourceQueue);
+
 private:
-    QVector<SystemResource> history;
+    QQueue<SystemResource> history;
 };
 
 #endif // RESOURCEANALYZER_H

@@ -6,6 +6,8 @@ LinuxDataProvider::LinuxDataProvider()
     this->m_prevIdleCpu = -1;
     this->m_prevTotalCpu = -1;
     this->m_diffCpuTime = -1;
+    this->isGetToalMem = false;
+    this->totalMemoryInKiloBytes = -1;
 }
 LinuxDataProvider::~LinuxDataProvider()
 {
@@ -87,7 +89,7 @@ QList<ProcessInfo> LinuxDataProvider::getProcessList()
             QStringList msgList = msg.split(' ');
             processinfo.setPid(msgList[0].toInt());                     // pid
             processinfo.setName(msgList[1].remove('(').remove(')'));    // name
-            processinfo.setMemoryUsage(msgList[23].toInt() * 4096 / 1000000);        // memory
+            processinfo.setMemoryUsage(msgList[23].toInt() * 4096 / 1024 / 1024);        // memory
             processinfo.setState(msgList[2]);                           // state
             // cpu 占用率（百分比） --- 两次采样---
             currentTime = msgList[13].toDouble() +
@@ -97,9 +99,9 @@ QList<ProcessInfo> LinuxDataProvider::getProcessList()
             if(m_prevProcCpuTime.contains(pid) && -1 != m_diffCpuTime)
             {   // 如果缓存中有上次的数据
                 double prevTime = m_prevProcCpuTime[pid];
-                // 此处存放进程在间隔之中占用的cpu时间
                 double processCpuTime = currentTime - prevTime;
                 double usage = (processCpuTime / m_diffCpuTime) * 100;
+                usage = QString::number(usage,'f',2).toDouble();
                 processinfo.setCpuUsage(usage);
             }
             else
@@ -130,19 +132,28 @@ SystemResource* LinuxDataProvider::getSystemResource()
         do
         {
             lineMsg = in.readLine();
-            if(lineMsg.startsWith("MemTotal:"))
+            if(!this->isGetToalMem && lineMsg.startsWith("MemTotal:"))
             {
                 int len = lineMsg.remove(' ').size();
-                double totalMemory = lineMsg.mid(9,len - 11).toDouble() / 1024 / 1024;
-                totalMemory = QString::number(totalMemory,'f',2).toDouble();
-                sysRes->setMemoryTotal(totalMemory);
+                // 计算总内存,对于每次启动此程序，此字段一般不变化，所以每次只需读取一次
+                this->totalMemoryInKiloBytes = lineMsg.mid(9,len - 11).toDouble();
+                this->isGetToalMem = true;
             }
             else if(lineMsg.startsWith("MemAvailable:"))
             {
                 int len = lineMsg.remove(' ').size();
-                double usedMemory = lineMsg.mid(13,len - 15).toDouble() / 1024 / 1024;
+                double availableMemoryInKiloBytes = lineMsg.mid(13,len - 15).toDouble();
+                // 计算使用的内存（KB）
+                double usedMemoryInKiloBytes = this->totalMemoryInKiloBytes - availableMemoryInKiloBytes;
+                // 先转化为 GB 再保留小数否则小数会在除完后再出现
+                double usedMemory = usedMemoryInKiloBytes / 1024 / 1024;
+                double totalMemory = this->totalMemoryInKiloBytes / 1024 / 1024;
+
                 usedMemory = QString::number(usedMemory,'f',2).toDouble();
+                totalMemory = QString::number(totalMemory,'f',2).toDouble();
+                // 存入 sysRes
                 sysRes->setMemoryUsed(usedMemory);
+                sysRes->setMemoryTotal(totalMemory);
             }
             else if(lineMsg.startsWith("SwapTotal:"))
             {
@@ -350,7 +361,7 @@ QString LinuxDataProvider::formatTime(double temp)
     int minutes = remaining / minInt;
 
     int seconds = remaining % minInt;
-    return QString("%L1d %2:%3:%4")
+    return QString("%L1天 %2:%3:%4")
             .arg(day)
             .arg(hour, 2, 10, QLatin1Char('0'))
             .arg(minutes, 2, 10, QLatin1Char('0'))
