@@ -26,13 +26,20 @@ Widget::Widget(QWidget *parent)
             &ResourceAnalyzer::handleSystemResourceUpdate);
     dataCollector->startCollection(1000);
 
-    // 3.接受 resourceAnalyzer 传来的信号
+    // 3.接受 ResourceWidget 传来的信号 systemResourceUpdate 系统资源更新 指定由本类的 onSystemResourceUpdate 函数处理
+    // 将更新的数据显示到 ui 中
     connect(this->resourceWidget, &ResourceWidget::systemResourceUpdate, this,
             &Widget::onSystemResourceUpdate);
 
+    // 4.传递筛选因子给 processTableModel
+    connect(ui->FilterComboBox, &QComboBox::currentTextChanged,
+                    this->myTableModel, &ProcessTableModel::filterComboBoxChanged);
+
+    // 5.将筛选框中的数据内容传递给 processTableModel，筛选完成刷新数据再显示
+    connect(ui->FilterLineEdit, &QLineEdit::textChanged,
+                    this->myTableModel, &ProcessTableModel::filterLineEditChanged);
 
     ui->processesTableView->setModel(this->myTableModel);
-
 }
 
 void Widget::onSystemResourceUpdate(SystemResource newSystemResource)

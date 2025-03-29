@@ -27,6 +27,11 @@ public:
 
 signals:
 
+
+private:
+    // 获取页面大小
+    virtual void getKernelPageSize() = 0;
+
 };
 
 #endif // SYSTEMDATAPROVIDER_H

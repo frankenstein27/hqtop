@@ -8,6 +8,10 @@ LinuxDataProvider::LinuxDataProvider()
     this->m_diffCpuTime = -1;
     this->isGetToalMem = false;
     this->totalMemoryInKiloBytes = -1;
+    this->m_KernelPageSize = -1;
+
+    this->getKernelPageSize();
+    this->getUserIdMap();
 }
 LinuxDataProvider::~LinuxDataProvider()
 {
@@ -68,8 +72,10 @@ QList<ProcessInfo> LinuxDataProvider::getProcessList()
                 {
                     if(lineMsg.startsWith("Uid:"))
                     {   // 此处只获得了 用户 id 需要在 /etc/passwd 文件中转换为用户名
-                        QStringList uid = lineMsg.mid(5).split('\t');
-                        processinfo.setUser(uid[0]);
+                        QStringList sUserId = lineMsg.mid(5).split('\t');
+                        qint64 iUserId = sUserId[0].toInt();
+                        QString userName = this->userIdMap.value(iUserId);
+                        processinfo.setUser(userName);
                     }
                 }
             }
@@ -87,10 +93,10 @@ QList<ProcessInfo> LinuxDataProvider::getProcessList()
             QTextStream in(&file);
             QString msg = in.readAll();
             QStringList msgList = msg.split(' ');
-            processinfo.setPid(msgList[0].toInt());                     // pid
-            processinfo.setName(msgList[1].remove('(').remove(')'));    // name
-            processinfo.setMemoryUsage(msgList[23].toInt() * 4096 / 1024 / 1024);        // memory
-            processinfo.setState(msgList[2]);                           // state
+            processinfo.setPid(msgList[0].toInt());                                                 // pid
+            processinfo.setName(msgList[1].remove('(').remove(')'));                                // name
+            processinfo.setMemoryUsage(msgList[23].toInt() * this->m_KernelPageSize / 1024);        // memory
+            processinfo.setState(msgList[2]);                                                       // state
             // cpu 占用率（百分比） --- 两次采样---
             currentTime = msgList[13].toDouble() +
                     msgList[14].toDouble() +
@@ -280,6 +286,31 @@ void LinuxDataProvider::getAllProcess()
             this->processIDs->push_back(dec);
     }
 }
+void LinuxDataProvider::getKernelPageSize()
+{
+    QFile file;
+    file.setFileName("/proc/self/smaps");
+    if(!file.open(QFile::ReadOnly | QFile::Text))
+    {
+        qDebug() << "open file /proc/self/smaps wrong!";
+    }
+    else
+    {
+        QTextStream in(&file);
+        QString lineMsg;
+        do
+        {
+            lineMsg = in.readLine();
+            if(lineMsg.startsWith("KernelPageSize"))
+            {
+                lineMsg.remove(" ");
+                this->m_KernelPageSize = lineMsg.mid(15,1).toShort();
+                break;
+            }
+        }while(!in.atEnd());
+        file.close();
+    }
+}
 
 qint64 LinuxDataProvider::getCpuNum()
 {
@@ -368,5 +399,28 @@ QString LinuxDataProvider::formatTime(double temp)
             .arg(seconds, 2, 10, QLatin1Char('0'));
 }
 
-
+void LinuxDataProvider::getUserIdMap()
+{
+    // 读取 /etc/passwd 文件
+    QFile file;
+    file.setFileName("/etc/passwd");
+    QStringList userInfoList;
+    if(!file.open(QFile::ReadOnly | QFile::Text))
+    {
+        qDebug() << "open file /etc/passwd wrong!";
+    }
+    else
+    {
+        QTextStream in(&file);
+        QString lineMsg;
+        do
+        {
+            userInfoList.clear();
+            lineMsg = in.readLine();
+            userInfoList = lineMsg.split(':');
+            this->userIdMap.insert(userInfoList[2].toInt(),userInfoList[0]);
+        }while(!in.atEnd());
+        file.close();
+    }
+}
 

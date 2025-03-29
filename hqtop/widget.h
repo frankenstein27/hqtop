@@ -29,8 +29,9 @@ public:
 private slots:
     void onSystemResourceUpdate(SystemResource newSystemResource);
 
-
     void on_testPushButton_clicked();
+
+signals:
 
 private:
     Ui::Widget *ui;

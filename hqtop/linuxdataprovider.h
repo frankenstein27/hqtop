@@ -23,6 +23,8 @@ public:
     SystemResource* getSystemResource() override;
     bool killProcess(int pid) override;
 
+
+
     qint64 getCpuNum();
     qint64 cpuNum = 0;
 
@@ -32,6 +34,13 @@ private:
     QString formatTime(double temp);
 
 private:
+    // 获取页面大小
+    void getKernelPageSize() override;
+    // 获取 用户ID和用户名 的映射
+    void getUserIdMap();
+
+    QMap<qint64,QString> userIdMap;
+
     bool isGetToalMem;
     double totalMemoryInKiloBytes;
 
@@ -39,6 +48,8 @@ private:
     QMap<qint64,double> m_prevProcCpuTime;
     double m_prevTotalCpu,m_prevIdleCpu,m_diffCpuTime;;
 
+    // 页面大小 KB
+    short m_KernelPageSize;
 };
 
 #endif // LINUXDATAPROVIDER_H

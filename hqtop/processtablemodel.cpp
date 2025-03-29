@@ -9,8 +9,9 @@ ProcessTableModel::ProcessTableModel(ProcessManager *processmanager, QObject *pa
     , m_sortOrder(Qt::AscendingOrder)
     , m_sortedColumn(-1)
     , m_isMsgBox(false)
+    , m_filterFactor("pid")
+    , m_filterText("")
 {
-
     connect(this->manager, &ProcessManager::processesUpdated, this, &ProcessTableModel::onProcessesUpdate);
 }
 
@@ -21,12 +22,14 @@ ProcessTableModel::~ProcessTableModel()
 
 void ProcessTableModel::onProcessesUpdate(QList<ProcessInfo> processes)
 {
-    beginResetModel();
-    this->m_processes = processes;
-    endResetModel();
+//    beginResetModel();
+    this->m_originalProcesses = processes;
+    this->applyFilter();
 
-    if(-1 != m_sortedColumn)
-        sort(m_sortedColumn, m_sortOrder);
+//    endResetModel();
+
+//    if(-1 != m_sortedColumn)
+//        sort(m_sortedColumn, m_sortOrder);
 
     // 可在此处找出变化的项 进行增量更新
     /*
@@ -52,7 +55,42 @@ void ProcessTableModel::onProcessesUpdate(QList<ProcessInfo> processes)
     */
 }
 
+void ProcessTableModel::applyFilter()
+{
+    beginResetModel();
+    if(this->m_filterText.isEmpty())
+    {   // 如果未输入任何过滤内容 要展示的数据即为所有数据
+        this->m_processes = m_originalProcesses;
+    }
+    else
+    {   // 有输入的过滤内容 根据匹配到的 process（通过contains函数找到是否包含）
+        // 包含即加入要展示的数据 反之不做处理
+        this->m_processes.clear();
+        for(const ProcessInfo& process : this->m_originalProcesses)
+        {
+            bool match = false;
+            if (m_filterFactor == "pid")
+            {
+                QString pidStr = QString::number(process.getPid());
+                match = pidStr.contains(m_filterText, Qt::CaseInsensitive);
+            }
+            else if (m_filterFactor == "name")
+                match = process.getName().contains(m_filterText, Qt::CaseInsensitive);
+            else if (m_filterFactor == "user")
+                match = process.getUser().contains(m_filterText, Qt::CaseInsensitive);
+            else if (m_filterFactor == "state")
+                match = process.getState().contains(m_filterText, Qt::CaseInsensitive);
 
+            if (match) {
+                m_processes.append(process);
+            }
+        }
+    }
+    endResetModel();
+    // 无论如何 都要进行排序处理
+    if(-1 != m_sortedColumn)
+        sort(m_sortedColumn, m_sortOrder);
+}
 
 void ProcessTableModel::sort(int column, Qt::SortOrder order) {
     // 保存排序配置
@@ -77,12 +115,12 @@ void ProcessTableModel::sort(int column, Qt::SortOrder order) {
             });
             break;
         case 2:  // User 列
-            if(!m_isMsgBox)
+            m_isMsgBox = false;
+            std::sort(m_processes.begin(), m_processes.end(), [order](const ProcessInfo &a, const ProcessInfo &b)
             {
-                m_isMsgBox = true;
-                qDebug() << "无法排序" << column;
-                QMessageBox::warning(nullptr, "warning", "无法排序");
-            }
+                return (order == Qt::AscendingOrder) ?
+                            (a.getUser() < b.getUser()) : (a.getUser() > b.getUser());
+            });
             break;
         case 3:  // State 列
             m_isMsgBox = false;
@@ -122,20 +160,7 @@ void ProcessTableModel::sort(int column, Qt::SortOrder order) {
     // 通知视图数据已变更
     emit dataChanged(index(0, 0), index(rowCount()-1, columnCount()-1));
 }
-// 获取行数
-int ProcessTableModel::rowCount(const QModelIndex &parent) const
-{
-    if(parent.isValid())
-        return 0;
-    return (this->manager->getProcesses()).size();     // 有多少个 processInfo 就有多少个数据(行)
-}
-// 获取列数
-int ProcessTableModel::columnCount(const QModelIndex &parent) const
-{
-    if(parent.isValid())
-        return 0;
-    return 6;           // PID、名称、用户、状态、CPU%、内存%
-}
+
 // 部署数据
 QVariant ProcessTableModel::data(const QModelIndex &index, int role) const
 {
@@ -147,6 +172,7 @@ QVariant ProcessTableModel::data(const QModelIndex &index, int role) const
     if(role == Qt::DisplayRole)
     {
         const int row = index.row();
+
         switch (index.column())
         {
             case 0:
@@ -167,6 +193,18 @@ QVariant ProcessTableModel::data(const QModelIndex &index, int role) const
 
     }
     return QVariant();
+}
+
+void ProcessTableModel::filterLineEditChanged(const QString& text)
+{
+    this->m_filterText = text;
+    this->applyFilter();
+}
+
+void ProcessTableModel::filterComboBoxChanged(const QString& arg1)
+{
+    this->m_filterFactor = arg1;
+    this->applyFilter();
 }
 // 设置表头内容
 QVariant ProcessTableModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -199,4 +237,18 @@ QVariant ProcessTableModel::headerData(int section, Qt::Orientation orientation,
     }
 
     return QVariant();
+}
+// 获取行数
+int ProcessTableModel::rowCount(const QModelIndex &parent) const
+{
+    if(parent.isValid())
+        return 0;
+    return m_processes.size();     // 有多少个 processInfo 就有多少个数据(行)
+}
+// 获取列数
+int ProcessTableModel::columnCount(const QModelIndex &parent) const
+{
+    if(parent.isValid())
+        return 0;
+    return 6;           // PID、名称、用户、状态、CPU%、内存%
 }

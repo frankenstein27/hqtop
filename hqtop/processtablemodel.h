@@ -23,13 +23,22 @@ public:
                                                                         const override;
 
     void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
+public slots:
+    void filterComboBoxChanged(const QString& arg1);
+    void filterLineEditChanged(const QString& text);
 
 private slots:
     void onProcessesUpdate(QList<ProcessInfo> processes);
 
+
 private:
+    void applyFilter();
+
+
     ProcessManager *manager;
-    // 缓存进程数据
+    // 缓存原始数据
+    QList<ProcessInfo> m_originalProcesses;
+    // 缓存过滤、排序之后进程数据
     QList<ProcessInfo> m_processes;
 
     // 用于保存排序状态（当前按...排序）
@@ -37,6 +46,10 @@ private:
     Qt::SortOrder m_sortOrder;
     // 确保点击一次无法排序的列，提示框只会出现一次
     bool m_isMsgBox;
+    // 筛选因子
+    QString m_filterFactor;
+    // 筛选内容
+    QString m_filterText;
 };
 
 #endif // PROCESSTABLEMODEL_H
