@@ -20,6 +20,7 @@ SOURCES += \
     linuxdataprovider.cpp \
     logger.cpp \
     main.cpp \
+    processesdisposeworker.cpp \
     processinfo.cpp \
     processmanager.cpp \
     processtablemodel.cpp \
@@ -28,13 +29,13 @@ SOURCES += \
     setting.cpp \
     systemdataprovider.cpp \
     systemresource.cpp \
-    widget.cpp \
-    worker.cpp
+    widget.cpp
 
 HEADERS += \
     datacollector.h \
     linuxdataprovider.h \
     logger.h \
+    processesdisposeworker.h \
     processinfo.h \
     processmanager.h \
     processtablemodel.h \
@@ -43,8 +44,7 @@ HEADERS += \
     setting.h \
     systemdataprovider.h \
     systemresource.h \
-    widget.h \
-    worker.h
+    widget.h
 
 FORMS += \
     resourcewidget.ui \

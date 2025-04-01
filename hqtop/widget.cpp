@@ -1,6 +1,10 @@
 #include "widget.h"
 #include "ui_widget.h"
 
+/* 本类涉及到的多为与 UI 有关操作，因此无法在子线程中运行，封装的底层函数直接调用即可完成程序功能
+ *
+ */
+
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::Widget)
@@ -18,6 +22,7 @@ Widget::Widget(QWidget *parent)
 
     // 启动程序即开始收集数据
     // 1.接收 dataCollector 传来的信号 updateProcesses 进程信息更新 指定由 processManager 中的函数处理
+    // 由于 dataCollector 整个对象都被移至子线程中，所以此信号也由子线程发出
     connect(this->dataCollector, &DataCollector::updateProcesses, this->processmanager,
             &ProcessManager::handldProcessUpdate);
 

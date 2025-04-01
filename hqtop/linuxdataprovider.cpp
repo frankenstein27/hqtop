@@ -1,5 +1,9 @@
 #include "linuxdataprovider.h"
 
+/* 本类共有函数全部由 datacollector 类的 fetchData 函数调用，因此均运行在子线程 P1 中
+ *
+ */
+
 LinuxDataProvider::LinuxDataProvider()
 {
     this->processIDs = new QList<qint64>();     // 分配内存

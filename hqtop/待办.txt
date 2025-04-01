@@ -3,8 +3,11 @@
                                 3.(已完成排序) 完善 processesmanager 中的筛选等功能
                                 4.（已完成）将用户ID处理为用户名
                                 5.（已完成）仿照 processestablemodel 的写法，完成 resourcewidget
-6.理清线程关系 在 dataCollector 中开启子线程处理数据收集 在 processesmanager 和 resourceanalyzer 中开启子线程 处理耗时功能
+                                6.（已完成）理清线程关系
+                                    （1）在 dataCollector 中开启子线程处理数据收集
+                                    （2）在 processesmanager 中开启子线程 处理耗时功能
 7.实现 resourceanalyzer 中的增加数据历史点、获取 cpu 记录、获取 mem 记录等功能
+    （1）在 resourceanalyzer 中开启子线程 处理耗时功能
 8.processes 在 processestablemodel 中实现增量更新，节约性能
 9.占用资源高的进程高亮
 10.实现日志系统，记录错误，对占用资源高的进程进行记录

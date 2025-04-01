@@ -6,6 +6,7 @@
 #include <QModelIndex>
 
 #include "processmanager.h"
+#include "processesdisposeworker.h"
 
 
 class ProcessTableModel : public QAbstractTableModel
@@ -23,25 +24,37 @@ public:
                                                                         const override;
 
     void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
+
+
 public slots:
+    // 筛选因子发生改变 传递筛选因子
     void filterComboBoxChanged(const QString& arg1);
+    // 筛选内容发生改变 传递内容文本
     void filterLineEditChanged(const QString& text);
 
 private slots:
+    // 进程数据更新 信号由 processmanager 发来
     void onProcessesUpdate(QList<ProcessInfo> processes);
-
+    // 排序完成
+    void onSortFinished(QList<ProcessInfo> sortedProcesses,bool isMsgBox,int column);
+    // 过滤完成
+    void onFilterFinished(QList<ProcessInfo> filteredProcesses);
 
 private:
+    // 过滤函数
     void applyFilter();
-
+    // 请求异步排序函数 在 sort 函数中调用
+    void requestAsyncSort(int column, Qt::SortOrder order);
+    // 异步过滤函数 在 applyFilter 函数中调用
+    void asyncFilter();
 
     ProcessManager *manager;
-    // 缓存原始数据
+    // 缓存原始数据（下层传递来的数据）
     QList<ProcessInfo> m_originalProcesses;
-    // 缓存过滤、排序之后进程数据
+    // 缓存过滤、排序之后进程数据（真正要现实的数据）
     QList<ProcessInfo> m_processes;
 
-    // 用于保存排序状态（当前按...排序）
+    // 用于保存排序状态（当前按...字段排序、升/降序）
     int m_sortedColumn;
     Qt::SortOrder m_sortOrder;
     // 确保点击一次无法排序的列，提示框只会出现一次
@@ -50,6 +63,10 @@ private:
     QString m_filterFactor;
     // 筛选内容
     QString m_filterText;
+    // 排序工作类
+    ProcessesDisposeWorker *m_processesDisposeWorker;
+    // 子线程对象
+    QThread *m_sortThread;
 };
 
 #endif // PROCESSTABLEMODEL_H

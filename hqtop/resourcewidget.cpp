@@ -1,6 +1,10 @@
 #include "resourcewidget.h"
 #include "ui_resourcewidget.h"
 
+ /*
+  *
+  */
+
 ResourceWidget::ResourceWidget(ResourceAnalyzer *resourceanalyzer,QWidget *parent) :
     QWidget(parent),
     m_resourceanalyzer(resourceanalyzer),

@@ -1,5 +1,10 @@
 #include "processmanager.h"
 
+/*  本类的构造函数开启了线程 P2 ，因此本类所有函数均运行在线程 P2 中
+ *
+ */
+
+
 ProcessManager::ProcessManager()
 {
     this->moveToThread(&this->m_workerThread);
