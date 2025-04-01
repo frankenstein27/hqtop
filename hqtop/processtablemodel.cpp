@@ -88,18 +88,18 @@ void ProcessTableModel::applyFilter()
 {
 
     if(this->m_filterText.isEmpty())
-    {   // 如果未输入任何过滤内容 要展示的数据即为所有数据
+    {   // 如果未输入任何过滤内容 要展示的数据即为所有数据 无需进入子线程
         beginResetModel();
         this->m_processes = m_originalProcesses;
         endResetModel();
         // 只要有过排序请求的点击 即进行排序处理
         if(-1 != m_sortedColumn)
             sort(m_sortedColumn, m_sortOrder);
+        else
+            emit processesNumberChanged(m_processes.size());
     }
     else
-    {
         this->asyncFilter();
-    }
 }
 
 
@@ -114,6 +114,8 @@ void ProcessTableModel::asyncFilter()
                               Q_ARG(QString, this->m_filterText));
 }
 
+
+// 过滤完成接收的槽函数
 void ProcessTableModel::onFilterFinished(QList<ProcessInfo> filteredProcesses)
 {
     beginResetModel();
@@ -122,10 +124,12 @@ void ProcessTableModel::onFilterFinished(QList<ProcessInfo> filteredProcesses)
 
     if(-1 != m_sortedColumn)
         sort(m_sortedColumn, m_sortOrder);
+    else
+        emit processesNumberChanged(m_processes.size());
 }
 
 
-// 排序：因为不能直接在此类中开启子线程，所以在 sort 中调用异步函数，异步函数中排序逻辑在子线程中完成
+// 排序：因为不能直接在此类中开启子线程，所以在 sort 中调用 async 异步函数，异步函数中排序逻辑在子线程中完成
 void ProcessTableModel::sort(int column, Qt::SortOrder order)
 {
     // 保存排序配置
@@ -229,6 +233,7 @@ void ProcessTableModel::onSortFinished(QList<ProcessInfo> sortedProcesses,bool i
         qDebug() << "无法排序" << column;
         QMessageBox::warning(nullptr, "warning", "无法排序");
     }
+    emit processesNumberChanged(m_processes.size());
 
     // 结束试图模型更新
     endResetModel();
@@ -270,7 +275,7 @@ QVariant ProcessTableModel::data(const QModelIndex &index, int role) const
 }
 
 
-// 过滤内容更改
+// 过滤内容发生变化
 void ProcessTableModel::filterLineEditChanged(const QString& text)
 {
     this->m_filterText = text;
@@ -278,7 +283,7 @@ void ProcessTableModel::filterLineEditChanged(const QString& text)
 }
 
 
-// 过滤因子更改
+// 过滤因子发生变化
 void ProcessTableModel::filterComboBoxChanged(const QString& arg1)
 {
     this->m_filterFactor = arg1;

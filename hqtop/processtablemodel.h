@@ -25,7 +25,6 @@ public:
 
     void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
 
-
 public slots:
     // 筛选因子发生改变 传递筛选因子
     void filterComboBoxChanged(const QString& arg1);
@@ -39,6 +38,10 @@ private slots:
     void onSortFinished(QList<ProcessInfo> sortedProcesses,bool isMsgBox,int column);
     // 过滤完成
     void onFilterFinished(QList<ProcessInfo> filteredProcesses);
+
+signals:
+    // 进程列表发生变化 进程数量也发生变化 发出进程数量变化信号
+    void processesNumberChanged(qint64 processesNumber) const;
 
 private:
     // 过滤函数

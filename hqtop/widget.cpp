@@ -43,6 +43,10 @@ Widget::Widget(QWidget *parent)
     // 5.将筛选框中的数据内容传递给 processTableModel，筛选完成刷新数据再显示
     connect(ui->FilterLineEdit, &QLineEdit::textChanged,
                     this->myTableModel, &ProcessTableModel::filterLineEditChanged);
+    // 将进程数量更新信号与 onProcessesNumberChanged 关联
+    connect(this->myTableModel, &ProcessTableModel::processesNumberChanged,
+            this, &Widget::onProcessesNumberChanged);
+
 
     ui->processesTableView->setModel(this->myTableModel);
 }
@@ -55,6 +59,12 @@ void Widget::onSystemResourceUpdate(SystemResource newSystemResource)
     ui->memTotalLabel->setText(QString::number(newSystemResource.getMemoryTotal()) + "GB");
     ui->swapUsedLabel->setText(QString::number(newSystemResource.getSwapUsed()) + "MB");
     ui->swapTotalLabel->setText(QString::number(newSystemResource.getSwapTotal()) + "GB");
+}
+
+void Widget::onProcessesNumberChanged(qint64 processesNumber)
+{
+    qDebug() << "processesNumber: " << processesNumber;
+    ui->processesNumberLabel->setText(QString::number(processesNumber));
 }
 
 void Widget::on_testPushButton_clicked()

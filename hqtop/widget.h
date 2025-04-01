@@ -29,6 +29,8 @@ public:
 private slots:
     void onSystemResourceUpdate(SystemResource newSystemResource);
 
+    void onProcessesNumberChanged(qint64 processesNumber);
+
     void on_testPushButton_clicked();
 
 signals:
