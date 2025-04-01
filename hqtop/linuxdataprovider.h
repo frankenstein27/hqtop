@@ -21,9 +21,9 @@ public:
 
     QList<ProcessInfo> getProcessList() override;
     SystemResource* getSystemResource() override;
-    bool killProcess(int pid) override;
 
-
+public slots:
+    bool killProcess(qint64 pid) override;
 
     qint64 getCpuNum();
     qint64 cpuNum = 0;

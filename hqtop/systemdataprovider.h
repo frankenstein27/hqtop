@@ -18,12 +18,13 @@ public:
     virtual QList<ProcessInfo> getProcessList() = 0;
     // 获取系统总体资源
     virtual SystemResource* getSystemResource() = 0;
-    // 杀死进程
-    virtual bool killProcess(int pid) = 0;
 
 
     // 析构函数
     virtual ~SystemDataProvider() = default;
+public slots:
+    // 杀死进程
+    virtual bool killProcess(qint64 pid) = 0;
 
 signals:
 

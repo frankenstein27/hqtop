@@ -244,10 +244,12 @@ SystemResource* LinuxDataProvider::getSystemResource()
     }
     return sysRes;
 }
-bool LinuxDataProvider::killProcess(int pid)
+bool LinuxDataProvider::killProcess(qint64 pid)
 {
-    // 具体逻辑后续实现
-    qDebug() << "pid: " << pid << "was killed.";
+//    qDebug() << "pid: " << pid << "was killed.";
+    QString command = QString("kill -9 %1").arg(pid);
+
+    system(command.toLocal8Bit().data());
 
     return false;
 }
@@ -427,4 +429,3 @@ void LinuxDataProvider::getUserIdMap()
         file.close();
     }
 }
-

@@ -43,10 +43,22 @@ Widget::Widget(QWidget *parent)
     // 5.将筛选框中的数据内容传递给 processTableModel，筛选完成刷新数据再显示
     connect(ui->FilterLineEdit, &QLineEdit::textChanged,
                     this->myTableModel, &ProcessTableModel::filterLineEditChanged);
-    // 将进程数量更新信号与 onProcessesNumberChanged 关联
-    connect(this->myTableModel, &ProcessTableModel::processesNumberChanged,
-            this, &Widget::onProcessesNumberChanged);
 
+    // 6.将进程数量更新信号与 onProcessesNumberChanged 关联
+    connect(this->myTableModel, &ProcessTableModel::processesNumberChanged,
+                    this, &Widget::onProcessesNumberChanged);
+
+    // 7.将选中进程传递给 processTableModel
+    connect(ui->processesTableView, &QTableView::clicked,
+                    this->myTableModel, &ProcessTableModel::onTableRowClicked);
+
+    // 8.删除按钮被按下 由 ProcessTableModel 的 onDeletePushButtonClicked 接收
+    connect(ui->deletePushButton, &QPushButton::clicked,
+                    this->myTableModel, &ProcessTableModel::onDeletePushButtonClicked);
+
+    // 9.杀死进程信号发出 由 LinuxDataProvider的killProcess 接收
+    connect(this->processmanager, &ProcessManager::killProcessSignal,
+                    this->dataprovider, &SystemDataProvider::killProcess);
 
     ui->processesTableView->setModel(this->myTableModel);
 }
@@ -63,13 +75,7 @@ void Widget::onSystemResourceUpdate(SystemResource newSystemResource)
 
 void Widget::onProcessesNumberChanged(qint64 processesNumber)
 {
-    qDebug() << "processesNumber: " << processesNumber;
     ui->processesNumberLabel->setText(QString::number(processesNumber));
-}
-
-void Widget::on_testPushButton_clicked()
-{
-    qDebug() << "pushButton was clicked.";
 }
 
 Widget::~Widget()

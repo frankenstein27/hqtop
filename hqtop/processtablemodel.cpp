@@ -14,6 +14,7 @@ ProcessTableModel::ProcessTableModel(ProcessManager *processmanager, QObject *pa
     , m_isMsgBox(false)
     , m_filterFactor("pid")
     , m_filterText("")
+    , m_checkedProcess(-1)
 {
     // 关联：进程信息更新信号（来自ProcessManager），由 onProcessesUpdate 处理
     connect(this->manager, &ProcessManager::processesUpdated,
@@ -237,6 +238,32 @@ void ProcessTableModel::onSortFinished(QList<ProcessInfo> sortedProcesses,bool i
 
     // 结束试图模型更新
     endResetModel();
+}
+
+
+void ProcessTableModel::onTableRowClicked(const QModelIndex &index)
+{
+    qint64 checkedRow = index.row();
+    m_checkedProcess = m_processes[checkedRow].getPid();
+//    qDebug() << "m_checkedProcess: " << m_checkedProcess;
+}
+
+void ProcessTableModel::onDeletePushButtonClicked()
+{
+    if(m_checkedProcess > 0)
+    {
+        QMessageBox::StandardButton result = QMessageBox::warning(nullptr, "kill",
+                                                                  "Are you sure kill checked progress?",
+                                                                  QMessageBox::Ok | QMessageBox::Cancel);
+        if(result == QMessageBox::Ok)
+            this->manager->killProcess(m_checkedProcess);
+        else if(result == QMessageBox::Cancel)
+            return;
+    }
+    else
+    {
+        QMessageBox::warning(nullptr, "warning", "no process checked.");
+    }
 }
 
 

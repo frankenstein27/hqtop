@@ -28,8 +28,7 @@ public slots:
 
 signals:
     void processesUpdated(QList<ProcessInfo> processes);
-
-
+    void killProcessSignal(qint64 pid);
 
 private:
     // processes 指针形式：会在 handleProcessUpdate 中触发浅拷贝，若为值形式：会调用 QList 的赋值运算符，即深拷贝
@@ -37,10 +36,6 @@ private:
     // 值类型：安全但是由于深拷贝有额外开销
     QList<ProcessInfo> m_processes;
 
-    // 排序方式 ascendingOrder表示升序 descendingOrder表示降序
-    Qt::SortOrder m_sortOrder = Qt::AscendingOrder;
-
-    qint64 sortColumn;
     QThread m_workerThread;
 
 };

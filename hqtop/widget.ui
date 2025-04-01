@@ -13,17 +13,17 @@
   <property name="windowTitle">
    <string>Widget</string>
   </property>
-  <widget class="QPushButton" name="testPushButton">
+  <widget class="QPushButton" name="deletePushButton">
    <property name="geometry">
     <rect>
-     <x>910</x>
-     <y>10</y>
-     <width>31</width>
-     <height>81</height>
+     <x>290</x>
+     <y>160</y>
+     <width>131</width>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string/>
+    <string>杀死选中进程</string>
    </property>
   </widget>
   <widget class="QTableView" name="processesTableView">

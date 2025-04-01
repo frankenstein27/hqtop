@@ -27,3 +27,8 @@ void ProcessManager::handldProcessUpdate(const QList<ProcessInfo>& processes)
     // 数据更新 通知 processTableModel
     emit processesUpdated(m_processes);
 }
+
+void ProcessManager::killProcess(qint64 pid)
+{
+    emit killProcessSignal(pid);
+}

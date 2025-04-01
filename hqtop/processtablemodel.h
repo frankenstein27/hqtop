@@ -30,6 +30,10 @@ public slots:
     void filterComboBoxChanged(const QString& arg1);
     // 筛选内容发生改变 传递内容文本
     void filterLineEditChanged(const QString& text);
+    // 选中 index 进程
+    void onTableRowClicked(const QModelIndex &index);
+    // 删除按钮被按下
+    void onDeletePushButtonClicked();
 
 private slots:
     // 进程数据更新 信号由 processmanager 发来
@@ -38,6 +42,7 @@ private slots:
     void onSortFinished(QList<ProcessInfo> sortedProcesses,bool isMsgBox,int column);
     // 过滤完成
     void onFilterFinished(QList<ProcessInfo> filteredProcesses);
+
 
 signals:
     // 进程列表发生变化 进程数量也发生变化 发出进程数量变化信号
@@ -70,6 +75,8 @@ private:
     ProcessesDisposeWorker *m_processesDisposeWorker;
     // 子线程对象
     QThread *m_sortThread;
+    // 选中的线程
+    qint64 m_checkedProcess;
 };
 
 #endif // PROCESSTABLEMODEL_H

@@ -31,8 +31,6 @@ private slots:
 
     void onProcessesNumberChanged(qint64 processesNumber);
 
-    void on_testPushButton_clicked();
-
 signals:
 
 private:
