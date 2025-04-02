@@ -2,7 +2,6 @@
 #define RESOURCEANALYZER_H
 
 #include <QObject>
-#include <QQueue>
 
 #include "systemresource.h"
 
@@ -19,12 +18,11 @@ public:
 
 
     // 添加历史数据记录点
-    void addDataPoint();
+    void addDataPoint(const SystemResource& sysRes);
     // 获取cpu历史数据
     void getCpuHistory();
     // 获取内存历史数据
     void getMemoryHistory();
-    // ...
 
     SystemResource& getLatestSystemResource();
 public slots:
@@ -36,7 +34,7 @@ signals:
 //    void systemResourceUpdate(QQueue<SystemResource> newSystemResourceQueue);
 
 private:
-    QQueue<SystemResource> history;
+
 };
 
 #endif // RESOURCEANALYZER_H

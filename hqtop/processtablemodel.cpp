@@ -17,9 +17,8 @@ ProcessTableModel::ProcessTableModel(ProcessManager *processmanager, QObject *pa
     , m_checkedProcess(-1)
 {
     // 关联：进程信息更新信号（来自ProcessManager），由 onProcessesUpdate 处理
-    connect(this->manager, &ProcessManager::processesUpdated,
-            this, &ProcessTableModel::onProcessesUpdate,
-            Qt::QueuedConnection);
+    connect(this->manager, &ProcessManager::processesUpdated,this,
+            &ProcessTableModel::onProcessesUpdate, Qt::QueuedConnection);
 
     // 初始化线程和排序工作函数
     this->m_sortThread = new QThread(this);

@@ -4,7 +4,6 @@
 #include <QWidget>
 #include <QDebug>
 #include <QThread>
-#include <QLayout>
 
 #include "datacollector.h"
 #include "resourcewidget.h"

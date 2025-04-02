@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>767</width>
-    <height>417</height>
+    <width>814</width>
+    <height>658</height>
    </rect>
   </property>
   <property name="sizeIncrement">
@@ -25,7 +25,7 @@
   <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
-     <x>0</x>
+     <x>10</x>
      <y>10</y>
      <width>131</width>
      <height>111</height>
@@ -50,16 +50,36 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="layoutWidget">
+  <widget class="QChartView" name="cpuChartView" native="true">
    <property name="geometry">
     <rect>
-     <x>174</x>
-     <y>8</y>
-     <width>581</width>
-     <height>111</height>
+     <x>205</x>
+     <y>0</y>
+     <width>600</width>
+     <height>330</height>
     </rect>
    </property>
-   <layout class="QGridLayout" name="gridLayout">
+  </widget>
+  <widget class="QChartView" name="memoryChartView" native="true">
+   <property name="geometry">
+    <rect>
+     <x>205</x>
+     <y>326</y>
+     <width>600</width>
+     <height>330</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QWidget" name="">
+   <property name="geometry">
+    <rect>
+     <x>5</x>
+     <y>150</y>
+     <width>191</width>
+     <height>299</height>
+    </rect>
+   </property>
+   <layout class="QFormLayout" name="formLayout">
     <item row="0" column="0">
      <widget class="QLabel" name="label_7">
       <property name="text">
@@ -74,70 +94,70 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="2">
-     <widget class="QLabel" name="label_4">
-      <property name="text">
-       <string>swapTotal:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="3">
-     <widget class="QLabel" name="swapTotalLabel">
-      <property name="text">
-       <string>TextLabel</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="0">
+    <item row="2" column="0" colspan="2">
      <widget class="QLabel" name="label_2">
       <property name="text">
        <string>memTotal:</string>
       </property>
      </widget>
     </item>
-    <item row="1" column="1">
+    <item row="3" column="1">
      <widget class="QLabel" name="memTotalLabel">
       <property name="text">
        <string>TextLabel</string>
       </property>
      </widget>
     </item>
-    <item row="1" column="2">
-     <widget class="QLabel" name="label_5">
-      <property name="text">
-       <string>swapUsed:</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="3">
-     <widget class="QLabel" name="swapUsedLabel">
-      <property name="text">
-       <string>TextLabel</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="0">
+    <item row="4" column="0" colspan="2">
      <widget class="QLabel" name="label_3">
       <property name="text">
        <string>memUsed:</string>
       </property>
      </widget>
     </item>
-    <item row="2" column="1">
+    <item row="5" column="1">
      <widget class="QLabel" name="memUsedLabel">
       <property name="text">
        <string>TextLabel</string>
       </property>
      </widget>
     </item>
-    <item row="2" column="2">
+    <item row="6" column="0" colspan="2">
+     <widget class="QLabel" name="label_4">
+      <property name="text">
+       <string>swapTotal:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="7" column="1">
+     <widget class="QLabel" name="swapTotalLabel">
+      <property name="text">
+       <string>TextLabel</string>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="0" colspan="2">
+     <widget class="QLabel" name="label_5">
+      <property name="text">
+       <string>swapUsed:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="9" column="1">
+     <widget class="QLabel" name="swapUsedLabel">
+      <property name="text">
+       <string>TextLabel</string>
+      </property>
+     </widget>
+    </item>
+    <item row="10" column="0">
      <widget class="QLabel" name="label_6">
       <property name="text">
        <string>upTime:</string>
       </property>
      </widget>
     </item>
-    <item row="2" column="3">
+    <item row="11" column="1">
      <widget class="QLabel" name="upTimeLabel">
       <property name="text">
        <string>TextLabel</string>
@@ -147,6 +167,14 @@
    </layout>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QChartView</class>
+   <extends>QWidget</extends>
+   <header>qchartview.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

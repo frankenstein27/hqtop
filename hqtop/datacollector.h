@@ -32,7 +32,8 @@ private slots:
 
 signals:
     void updateProcesses(const QList<ProcessInfo>& processes);
-    void updateSysResource(const SystemResource& resource);
+    void updateSysResourceToProcessesPage(const SystemResource& resource);
+    void updateSysResourceToSysResourcePage(const SystemResource& resource);
 
 private:
     SystemDataProvider *m_provider;
