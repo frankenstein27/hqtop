@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QDebug>
 #include <QThread>
+#include <QLayout>
 
 #include "datacollector.h"
 #include "resourcewidget.h"
@@ -31,7 +32,14 @@ private slots:
 
     void onProcessesNumberChanged(qint64 processesNumber);
 
+    void onProcessesPageShow();
+
+    void on_resourcePagePushButton_clicked();
+
 signals:
+    // 点击资源页 进程页即隐藏 发出进程页隐藏信号，系统资源更新和进程信息更新将不再传给本类
+    void processesPageHide();
+    void processesPageShow();
 
 private:
     Ui::Widget *ui;

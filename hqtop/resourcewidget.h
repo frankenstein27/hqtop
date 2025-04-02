@@ -23,11 +23,17 @@ public:
     void updateMemoryUsage(double percent);
     // ...... 其他获取新数据的函数
 
+public slots:
+    void onSystemResourceUpdate(SystemResource newSystemResource);
+
 private slots:
     void onSystsemReourceUpdate(SystemResource newSystemResource);
 
+    void on_processesPagePushButton_clicked();
+
 signals:
     void systemResourceUpdate(SystemResource newSystemResource);
+    void processesPageShow();
 
 private:
     Ui::ResourceWidget *ui;

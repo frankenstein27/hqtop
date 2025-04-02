@@ -22,13 +22,17 @@ public:
     void startCollection(int intervalMs = 1000);
     void stopCollection();
 
-signals:
-    void updateProcesses(const QList<ProcessInfo>& processes);
-    void updateSysResource(const SystemResource& resource);
 
+public slots:
+    void onProcessesPageHide();
+    void onProcessesPageShow();
 
 private slots:
     void fetchData();
+
+signals:
+    void updateProcesses(const QList<ProcessInfo>& processes);
+    void updateSysResource(const SystemResource& resource);
 
 private:
     SystemDataProvider *m_provider;
@@ -36,6 +40,8 @@ private:
     QTimer* m_timer = nullptr;
     QThread m_workerThread;
     qint64 m_intervalMs;
+    // 节约空间 用true表示进程页正在显示，系统页未在显示；false表示进程页未在显示，系统页正在显示
+    bool m_sysResourceReceiver;
 };
 
 #endif // DATACOLLECTOR_H

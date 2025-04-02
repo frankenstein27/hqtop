@@ -26,6 +26,7 @@ public slots:
     // 杀死进程
     virtual bool killProcess(qint64 pid) = 0;
 
+
 signals:
 
 

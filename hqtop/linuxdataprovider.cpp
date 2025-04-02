@@ -40,6 +40,9 @@ LinuxDataProvider& LinuxDataProvider::operator=(const LinuxDataProvider &other)
 
 QList<ProcessInfo> LinuxDataProvider::getProcessList()
 {
+    qDebug() << "LinuxDataProvider::getProcessList 被调用了";
+
+
     QList<ProcessInfo> processesInfo;
     // 调用函数 获取当前进程目录名
     this->getAllProcess();
@@ -127,6 +130,10 @@ QList<ProcessInfo> LinuxDataProvider::getProcessList()
 }
 SystemResource* LinuxDataProvider::getSystemResource()
 {
+    qDebug() << "LinuxDataProvider::getSystemResource 被调用了";
+
+
+
     SystemResource *sysRes = new SystemResource;
     // 先读取 总内存和已用内存
     QFile file;

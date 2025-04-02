@@ -26,10 +26,14 @@ Widget::Widget(QWidget *parent)
     connect(this->dataCollector, &DataCollector::updateProcesses, this->processmanager,
             &ProcessManager::handldProcessUpdate);
 
-    // 2.接收 dataCollector 传来的信号 updateSysResource 系统资源信息更新 指定由 ResourceAnalyzer 中的函数处理
+    // 2.1.接收 dataCollector 传来的信号 updateSysResource 系统资源信息更新 指定由 ResourceAnalyzer 中的函数处理
     connect(this->dataCollector, &DataCollector::updateSysResource, this->resourceanalyzer,
             &ResourceAnalyzer::handleSystemResourceUpdate);
     dataCollector->startCollection(1000);
+
+    // 2.2.接收 dataCollector 传来的信号 updateSysResource 系统资源信息更新 指定由 ResourceWidget 中的函数处理
+    connect(this->dataCollector, &DataCollector::updateSysResource, this->resourceWidget,
+            &ResourceWidget::onSystemResourceUpdate);
 
     // 3.接受 ResourceWidget 传来的信号 systemResourceUpdate 系统资源更新 指定由本类的 onSystemResourceUpdate 函数处理
     // 将更新的数据显示到 ui 中
@@ -60,6 +64,16 @@ Widget::Widget(QWidget *parent)
     connect(this->processmanager, &ProcessManager::killProcessSignal,
                     this->dataprovider, &SystemDataProvider::killProcess);
 
+    // 10.1.返回进程页信号 由 ResourceWidget 的进程页按钮发出本类中的 onProcessesPageShow 接收
+    connect(this->resourceWidget, &ResourceWidget::processesPageShow,
+                    this, &Widget::onProcessesPageShow);
+    // 10.2返回进程页信号 由 ResourceWidget 的进程页按钮发出,DataCollector 中的 onProcessesPageShow 接收
+    connect(this->resourceWidget, &ResourceWidget::processesPageShow,
+                    this->dataCollector, &DataCollector::onProcessesPageShow);
+
+    // 11.点击资源页按钮 发出 processesPageHide 信号
+    connect(this, &Widget::processesPageHide, this->dataCollector, &DataCollector::onProcessesPageHide);
+
     ui->processesTableView->setModel(this->myTableModel);
 }
 
@@ -87,4 +101,23 @@ Widget::~Widget()
     delete processmanager;
     delete dataCollector;
     delete dataprovider;
+}
+
+void Widget::onProcessesPageShow()
+{
+    if(!this->isVisible())
+    {
+        this->show();
+        emit this->processesPageShow();
+    }
+}
+
+void Widget::on_resourcePagePushButton_clicked()
+{
+    if(this->isVisible())
+    {
+        this->hide();
+        emit this->processesPageHide();
+    }
+    resourceWidget->show();
 }
