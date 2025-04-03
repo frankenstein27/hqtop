@@ -24,6 +24,7 @@ public:
         this->user = proInfo.user;
         this->state = proInfo.state;
     }
+    // 重载 = 赋值运算符
     ProcessInfo& operator=(const ProcessInfo &other)
     {
         if(this != &other)
@@ -36,6 +37,17 @@ public:
             this->state = other.state;
         }
         return *this;
+    }
+    // 重载 != 比较运算符
+    bool operator!=(const ProcessInfo &other)
+    {
+        if(this->pid != other.pid)  return true;
+        // 进程运行过程中，名字不会改变，所以无需比较名字
+        if(this->cpuUsage != other.cpuUsage) return true;
+        if(this->memoryUsage != other.memoryUsage) return true;
+        // 进程运行中无法改变用户名，所以无需比较用户名
+        if(this->state != other.state) return true;
+        return false;
     }
 
     qint64 getPid() const;

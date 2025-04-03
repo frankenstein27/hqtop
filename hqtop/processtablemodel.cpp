@@ -2,6 +2,7 @@
 
 #include <algorithm>  // 使用 std::sort
 #include <QMessageBox>
+#include <exception>
 
 /* 由于本类涉及到对 UI 的操作 因此无法在子进程中运行，但是可以把耗时操作（如过滤、排序）操作在子线程完成再传回来
  *
@@ -48,37 +49,63 @@ ProcessTableModel::~ProcessTableModel()
 // 保存原始数据之后即调用过滤函数
 void ProcessTableModel::onProcessesUpdate(QList<ProcessInfo> processes)
 {
-//    beginResetModel();
-    this->m_originalProcesses = processes;
-    this->applyFilter();
+    // 直接更新（若数据变动较小，浪费性能）
 
-//    endResetModel();
+//    this->m_originalProcesses = processes;
+//    this->applyFilter();
 
-//    if(-1 != m_sortedColumn)
-//        sort(m_sortedColumn, m_sortOrder);
-
-    // 可在此处找出变化的项 进行增量更新
-    /*
-    for (int i = 0; i < newProcesses.size(); ++i) {
-        if (i >= m_cachedProcesses.size() || m_cachedProcesses[i] != newProcesses[i]) {
-            m_cachedProcesses[i] = newProcesses[i];
-            QModelIndex topLeft = createIndex(i, 0);
-            QModelIndex bottomRight = createIndex(i, columnCount() - 1);
-            emit dataChanged(topLeft, bottomRight); // 局部刷新
+    if(!m_originalProcesses.size())
+    {
+        m_originalProcesses = processes;
+        this->applyFilter();
+    }
+    else
+    {
+        // 在此处找出变化的项 进行增量更新：将与原来不相等的进程替换
+        int newProcessesSize = processes.size();
+        int oldProcessesSize = m_originalProcesses.size();
+        int minProcessesSize = qMin(newProcessesSize, oldProcessesSize);
+        for (int i = 0; i < minProcessesSize; ++i)
+        {
+            if (m_originalProcesses[i] != processes[i])
+            {
+                m_originalProcesses[i] = processes[i];
+                QModelIndex topLeft = createIndex(i, 0);                            // 第 i 行的第一格
+                QModelIndex bottomRight = createIndex(i, columnCount() - 1);        // 第 i 行的第 columnCount 格
+                qDebug() << "局部刷新了" << processes[i].getPid() << processes[i].getName();
+                emit dataChanged(topLeft, bottomRight);                             // 局部刷新
+            }
         }
+        qDebug() << endl;
+        // 处理新增或删除的行：由于/proc/目录下的文件都是按照新旧顺序排放，所以新进程自然而然在后面
+        if (newProcessesSize > oldProcessesSize)
+        {
+            int newProcessesStartIndex = oldProcessesSize;
+            int newProcessesEndIndex = newProcessesSize - 1;
+            beginInsertRows(QModelIndex(), newProcessesStartIndex, newProcessesEndIndex);
+            for (int i = newProcessesStartIndex; i <= newProcessesEndIndex; ++i)
+            {
+                m_originalProcesses.append(processes[i]);
+            }
+            endInsertRows();
+        }
+        else if (newProcessesSize < oldProcessesSize)
+        {
+            int oldProcessesEndIndex = oldProcessesSize - 1;
+            int newProcessesEndIndex = newProcessesSize;
+            // 原本进程：--------------1--------2
+            // 新的进程：--------------
+            // beginRemoveRows要移除的即位 1-2 之间的，即从新进程列表结尾开始，到旧进程列表末尾结束
+            beginRemoveRows(QModelIndex(), newProcessesEndIndex, oldProcessesEndIndex);
+            for(int i = oldProcessesEndIndex; i >= newProcessesEndIndex; --i)
+            {
+                m_originalProcesses.removeAt(i);
+            }
+            endRemoveRows();
+        }
+        this->applyFilter();
     }
 
-    // 处理新增或删除的行
-    if (newProcesses.size() > m_cachedProcesses.size()) {
-        beginInsertRows(QModelIndex(), m_cachedProcesses.size(), newProcesses.size() - 1);
-        m_cachedProcesses = newProcesses;
-        endInsertRows();
-    } else if (newProcesses.size() < m_cachedProcesses.size()) {
-        beginRemoveRows(QModelIndex(), newProcesses.size(), m_cachedProcesses.size() - 1);
-        m_cachedProcesses = newProcesses;
-        endRemoveRows();
-    }
-    */
 }
 
 
@@ -136,72 +163,8 @@ void ProcessTableModel::sort(int column, Qt::SortOrder order)
     m_sortedColumn = column;
     m_sortOrder = order;
 
+    // 调用异步排序
     this->requestAsyncSort(column, order);
-
-    /* 根据列索引定义排序规则（原排序逻辑，移至子线程中完成）
-    switch (column) {
-        case 0:  // PID 列
-            m_isMsgBox = false;
-            std::sort(m_processes.begin(), m_processes.end(), [order](const ProcessInfo &a, const ProcessInfo &b)
-            {
-                return (order == Qt::AscendingOrder) ? (a.getPid() > b.getPid()) : (a.getPid() < b.getPid());
-            });
-            break;
-        case 1:  // Name 列
-            m_isMsgBox = false;
-            std::sort(m_processes.begin(), m_processes.end(), [order](const ProcessInfo &a, const ProcessInfo &b)
-            {
-                return (order == Qt::AscendingOrder) ?
-                            (a.getName() > b.getName()) : (a.getName() < b.getName());
-            });
-            break;
-        case 2:  // User 列
-            m_isMsgBox = false;
-            std::sort(m_processes.begin(), m_processes.end(), [order](const ProcessInfo &a, const ProcessInfo &b)
-            {
-                return (order == Qt::AscendingOrder) ?
-                            (a.getUser() > b.getUser()) : (a.getUser() < b.getUser());
-            });
-            break;
-        case 3:  // State 列
-            m_isMsgBox = false;
-            std::sort(m_processes.begin(), m_processes.end(), [order](const ProcessInfo &a, const ProcessInfo &b)
-            {
-                return (order == Qt::AscendingOrder) ?
-                            (a.getState() > b.getState()) : (a.getState() < b.getState());
-            });
-            break;
-        case 4:  // Cpu 列
-            m_isMsgBox = false;
-            std::sort(m_processes.begin(), m_processes.end(), [order](const ProcessInfo &a, const ProcessInfo &b)
-            {
-                return (order == Qt::AscendingOrder) ?
-                            (a.getCpuUsage() > b.getCpuUsage()) : (a.getCpuUsage() < b.getCpuUsage());
-            });
-            break;
-        case 5:  // Mem 列
-            m_isMsgBox = false;
-            std::sort(m_processes.begin(), m_processes.end(), [order](const ProcessInfo &a, const ProcessInfo &b)
-            {
-                return (order == Qt::AscendingOrder) ?
-                            (a.getMemoryUsage() > b.getMemoryUsage()) : (a.getMemoryUsage() < b.getMemoryUsage());
-            });
-            break;
-        default:
-            if(!m_isMsgBox)
-            {
-                m_isMsgBox = true;
-                qDebug() << "无法排序" << column;
-                QMessageBox::warning(nullptr, "warning", "无法排序");
-            }
-            break;
-        // 其他列...
-    }
-
-
-    // 通知视图数据已变更
-    emit dataChanged(index(0, 0), index(rowCount()-1, columnCount()-1));
-    */
 }
 
 
