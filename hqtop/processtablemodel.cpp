@@ -72,7 +72,7 @@ void ProcessTableModel::onProcessesUpdate(QList<ProcessInfo> processes)
                 m_originalProcesses[i] = processes[i];
                 QModelIndex topLeft = createIndex(i, 0);                            // 第 i 行的第一格
                 QModelIndex bottomRight = createIndex(i, columnCount() - 1);        // 第 i 行的第 columnCount 格
-                qDebug() << "局部刷新了" << processes[i].getPid() << processes[i].getName();
+//                qDebug() << "局部刷新了" << processes[i].getPid() << processes[i].getName();
                 emit dataChanged(topLeft, bottomRight);                             // 局部刷新
             }
         }
@@ -236,11 +236,22 @@ QVariant ProcessTableModel::data(const QModelIndex &index, int role) const
         return QVariant();
 
     const ProcessInfo& process = this->m_processes.at(index.row());
+    if(role == Qt::BackgroundRole)
+    {
+        if(process.getCpuUsage() >= 10 || process.getMemoryUsage() >= 800)
+            return QBrush(QColor(218, 69, 9));
+        else
+        {
+            if(index.row() % 2)
+                return QBrush(QColor(192, 192, 192));
+            else
+                return QBrush(QColor(3, 131, 135));
+        }
+    }
+
 
     if(role == Qt::DisplayRole)
     {
-        const int row = index.row();
-
         switch (index.column())
         {
             case 0:

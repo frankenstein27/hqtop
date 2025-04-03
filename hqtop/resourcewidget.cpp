@@ -15,6 +15,13 @@ ResourceWidget::ResourceWidget(ResourceAnalyzer *resourceanalyzer,QWidget *paren
 {
     ui->setupUi(this);
 
+    QPalette resPal(this->palette());
+    resPal.setColor(QPalette::Background, QColor(223, 234, 242));
+    this->setAutoFillBackground(true);
+    this->setPalette(resPal);
+
+
+
     connect(this->m_resourceanalyzer, &ResourceAnalyzer::systemResourceUpdate,
                     this, &ResourceWidget::onSystemResourceUpdate);
 
@@ -49,7 +56,14 @@ ResourceWidget::ResourceWidget(ResourceAnalyzer *resourceanalyzer,QWidget *paren
         // 隐藏图例
         cpuChart->legend()->hide();
         // 改变线条颜色
-        cpuSeries->setColor(Qt::black);
+        cpuSeries->setColor(QColor(247, 99, 12));
+
+
+        QPalette cpuPal(cpuChart->palette());
+        cpuPal.setColor(QPalette::Background, QColor(222, 210, 178));
+        cpuChart->setAutoFillBackground(true);
+        cpuChart->setPalette(cpuPal);
+
 
         // 初始化内存图表
         memoryChart = new QChart();
@@ -76,7 +90,10 @@ ResourceWidget::ResourceWidget(ResourceAnalyzer *resourceanalyzer,QWidget *paren
         // 隐藏图例
         memoryChart->legend()->hide();
         // 改变线条颜色
-        memorySeries->setColor(Qt::black);
+        memorySeries->setColor(QColor(16, 137, 62));
+
+        memoryChart->setAutoFillBackground(true);
+        memoryChart->setPalette(cpuPal);
 
     } catch (std::exception &e) {
         qDebug() << "e: " << e.what() ;

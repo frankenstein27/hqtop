@@ -10,6 +10,13 @@ Widget::Widget(QWidget *parent)
     , ui(new Ui::Widget)
 {
     ui->setupUi(this);
+
+    QPalette mainPal(this->palette());
+    mainPal.setColor(QPalette::Background, QColor(223, 234, 242));
+    this->setAutoFillBackground(true);
+    this->setPalette(mainPal);
+
+
     // 启用 tableView 排序功能
     ui->processesTableView->setSortingEnabled(true);
 
@@ -102,6 +109,7 @@ Widget::Widget(QWidget *parent)
 
     // 启动收集者 指定时间间隔为1秒
     dataCollector->startCollection(1000);
+
     // 将 TableView 的内容显示出来
     ui->processesTableView->setModel(this->myTableModel);
 }
