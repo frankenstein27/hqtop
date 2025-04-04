@@ -3,7 +3,9 @@
 
 #include <QString>
 #include <QSharedPointer>
-#include "spdlog/spdlog.h"
+
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/rotating_file_sink.h>
 
 
 class Logger
@@ -11,11 +13,11 @@ class Logger
 public:
     Logger();
 
-    static void logInfo(const QString& message);
-    static void logError(const QString& message);
+    void shutdown_logger();
+
 
 private:
-    static std::shared_ptr<spdlog::logger> spd_logger;
+    std::shared_ptr<spdlog::logger> spd_logger;
 
 };
 

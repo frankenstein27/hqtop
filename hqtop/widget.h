@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QDebug>
 #include <QThread>
+#include <iostream>
 
 #include "datacollector.h"
 #include "resourcewidget.h"
@@ -12,6 +13,8 @@
 #include "processmanager.h"
 #include "resourceanalyzer.h"
 #include "processtablemodel.h"
+#include "logger.h"
+
 
 
 QT_BEGIN_NAMESPACE
@@ -52,6 +55,7 @@ private:
     // UI显示层
     ProcessTableModel *myTableModel;
     ResourceWidget *resourceWidget;
+    Logger *logger;
 
 };
 #endif // WIDGET_H

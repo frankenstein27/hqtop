@@ -7,6 +7,7 @@
 
 #include "processmanager.h"
 #include "processesdisposeworker.h"
+#include "logger.h"
 
 
 class ProcessTableModel : public QAbstractTableModel
@@ -77,6 +78,8 @@ private:
     QThread *m_sortThread;
     // 选中的线程
     qint64 m_checkedProcess;
+    // 日志
+    std::shared_ptr<spdlog::logger> mylogger;
 };
 
 #endif // PROCESSTABLEMODEL_H

@@ -1,6 +1,7 @@
 #include "widget.h"
 #include "ui_widget.h"
 
+
 /* 本类涉及到的多为与 UI 有关操作，因此无法在子线程中运行，封装的底层函数直接调用即可完成程序功能
  *
  */
@@ -16,9 +17,12 @@ Widget::Widget(QWidget *parent)
     this->setAutoFillBackground(true);
     this->setPalette(mainPal);
 
-
     // 启用 tableView 排序功能
     ui->processesTableView->setSortingEnabled(true);
+
+    // 初始化日志
+    this->logger = new Logger();
+
 
     this->dataprovider = new LinuxDataProvider();
     this->dataCollector = new DataCollector(this->dataprovider);
@@ -138,6 +142,8 @@ Widget::~Widget()
     delete processmanager;
     delete dataCollector;
     delete dataprovider;
+    logger->shutdown_logger();
+    delete logger;
 }
 
 void Widget::onProcessesPageShow()

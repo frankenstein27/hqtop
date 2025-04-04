@@ -1,5 +1,6 @@
 #include "processtablemodel.h"
 
+
 #include <algorithm>  // 使用 std::sort
 #include <QMessageBox>
 #include <exception>
@@ -16,6 +17,7 @@ ProcessTableModel::ProcessTableModel(ProcessManager *processmanager, QObject *pa
     , m_filterFactor("pid")
     , m_filterText("")
     , m_checkedProcess(-1)
+    , mylogger(spdlog::get("global_logger"))
 {
     // 关联：进程信息更新信号（来自ProcessManager），由 onProcessesUpdate 处理
     connect(this->manager, &ProcessManager::processesUpdated,this,
@@ -65,18 +67,33 @@ void ProcessTableModel::onProcessesUpdate(QList<ProcessInfo> processes)
         int newProcessesSize = processes.size();
         int oldProcessesSize = m_originalProcesses.size();
         int minProcessesSize = qMin(newProcessesSize, oldProcessesSize);
+        ProcessInfo process;
+
+        QString log_str;
         for (int i = 0; i < minProcessesSize; ++i)
-        {
-            if (m_originalProcesses[i] != processes[i])
+        {   
+            process = processes[i];
+            if(process.getCpuUsage() >= 8)
             {
-                m_originalProcesses[i] = processes[i];
+                log_str = "High Cpu Usage! Pid: " + QString::number(process.getPid()) + " Name: "
+                        + process.getName() + " Cpu Usage: " + QString::number(process.getCpuUsage()) + "%";
+                mylogger->warn(log_str.toStdString());
+            }
+            if(process.getMemoryUsage() >= 800)
+            {
+                log_str = "High Memory Used! Pid: " + QString::number(process.getPid()) + " Name: "
+                        + process.getName() + " Memory Used: " + QString::number(process.getMemoryUsage()) + "MB";
+            }
+
+            if (m_originalProcesses[i] != process)
+            {
+                m_originalProcesses[i] = process;
                 QModelIndex topLeft = createIndex(i, 0);                            // 第 i 行的第一格
                 QModelIndex bottomRight = createIndex(i, columnCount() - 1);        // 第 i 行的第 columnCount 格
 //                qDebug() << "局部刷新了" << processes[i].getPid() << processes[i].getName();
                 emit dataChanged(topLeft, bottomRight);                             // 局部刷新
             }
         }
-        qDebug() << endl;
         // 处理新增或删除的行：由于/proc/目录下的文件都是按照新旧顺序排放，所以新进程自然而然在后面
         if (newProcessesSize > oldProcessesSize)
         {
@@ -218,7 +235,11 @@ void ProcessTableModel::onDeletePushButtonClicked()
                                                                   "Are you sure kill checked progress?",
                                                                   QMessageBox::Ok | QMessageBox::Cancel);
         if(result == QMessageBox::Ok)
+        {
+            QString str = "Process " + QString::number(m_checkedProcess) + " was killed!";
+            mylogger->warn(str.toStdString());
             this->manager->killProcess(m_checkedProcess);
+        }
         else if(result == QMessageBox::Cancel)
             return;
     }
