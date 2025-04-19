@@ -2,19 +2,27 @@
 #define SETTING_H
 
 #include <QVariant>
+#include <QSettings>
+#include <QDebug>
 
 class Setting
 {
 public:
     Setting();
+    ~Setting();
 
+    // 加载配置，模板函数，支持类型推断
+    template<typename T>
+    const T load(const QString& key, const T& defaultValue = T())
+    {
+        return settings.value(key, defaultValue).template value<T>();
+    }
 
-    QVariant load(const QString& key);
     void save(const QString& key, const QVariant& value);
 
 
 private:
-    QString configPath;
-};
+    QSettings settings;
+ };
 
 #endif // SETTING_H

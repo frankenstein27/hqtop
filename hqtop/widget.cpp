@@ -12,16 +12,37 @@ Widget::Widget(QWidget *parent)
 {
     ui->setupUi(this);
 
-    QPalette mainPal(this->palette());
-    mainPal.setColor(QPalette::Background, QColor(223, 234, 242));
-    this->setAutoFillBackground(true);
-    this->setPalette(mainPal);
-
     // 启用 tableView 排序功能
     ui->processesTableView->setSortingEnabled(true);
 
     // 初始化日志
     this->logger = new Logger();
+    // 初始化设置
+    this->setting = new Setting();
+
+    // 获取设置中的窗口等默认配置
+    int windowWidth = setting->load("Window/Width", 860);
+    QString theme = setting->load<QString>("Theme/Name", "Daytime");
+    int windowHeight = setting->load<int>("Window/Height", 720);
+
+    qDebug() << "theme: " << theme;
+
+    QPalette mainPal(this->palette());
+    if(theme == "Daytime")
+    {
+        qDebug() << "theme is Daytime Mode";
+        mainPal.setColor(QPalette::Background, QColor(223, 234, 242));
+    }
+    else if(theme == "Night")
+    {
+        qDebug() << "theme is Light Mode";
+        mainPal.setColor(QPalette::Background, QColor(32, 32, 32));
+    }
+    this->setAutoFillBackground(true);
+    this->setPalette(mainPal);
+
+
+    this->setFixedSize(windowWidth, windowHeight);
 
 
     this->dataprovider = new LinuxDataProvider();
@@ -30,6 +51,7 @@ Widget::Widget(QWidget *parent)
     this->resourceanalyzer = new ResourceAnalyzer();
     this->myTableModel = new ProcessTableModel(this->processmanager, ui->processesTableView);
     this->resourceWidget = new ResourceWidget(this->resourceanalyzer);
+    this->settingWidget = new SettingWidget(setting);
 
     // 启动程序即开始收集数据
 
@@ -111,7 +133,14 @@ Widget::Widget(QWidget *parent)
     connect(this->resourceWidget, &ResourceWidget::processesPageShow,
                     this, &Widget::onProcessesPageShow);
 
-    // 启动收集者 指定时间间隔为1秒
+    /* 8.设置中日志等级改变
+     *
+     */
+    connect(this->settingWidget, &SettingWidget::logLevelChanged,
+                    this->logger, &Logger::logLevelChangedHandle);
+
+
+    // 启动收集者 指定时间间隔为1000 ms
     dataCollector->startCollection(1000);
 
     // 将 TableView 的内容显示出来
@@ -164,4 +193,12 @@ void Widget::on_resourcePagePushButton_clicked()
         emit this->processesPageHide();
     }
     resourceWidget->show();
+}
+
+
+void Widget::on_settingsButton_clicked()
+{
+    // 设置子窗口模态：子窗口存在时不能操作父窗口
+    this->settingWidget->setWindowModality(Qt::ApplicationModal);
+    this->settingWidget->show();
 }

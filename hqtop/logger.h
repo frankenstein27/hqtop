@@ -8,12 +8,17 @@
 #include <spdlog/sinks/rotating_file_sink.h>
 
 
-class Logger
+class Logger : public QObject
 {
+    Q_OBJECT
+
 public:
     Logger();
 
     void shutdown_logger();
+
+public slots:
+    void logLevelChangedHandle(QString newLevel);
 
 
 private:

@@ -14,6 +14,8 @@
 #include "resourceanalyzer.h"
 #include "processtablemodel.h"
 #include "logger.h"
+#include "setting.h"
+#include "settingwidget.h"
 
 
 
@@ -38,6 +40,8 @@ private slots:
 
     void on_resourcePagePushButton_clicked();
 
+    void on_settingsButton_clicked();
+
 signals:
     // 点击资源页 进程页即隐藏 发出进程页隐藏信号，系统资源更新和进程信息更新将不再传给本类
     void processesPageHide();
@@ -55,7 +59,11 @@ private:
     // UI显示层
     ProcessTableModel *myTableModel;
     ResourceWidget *resourceWidget;
+    SettingWidget *settingWidget;
+    // 日志
     Logger *logger;
+    // 设置
+    Setting *setting;
 
 };
 #endif // WIDGET_H

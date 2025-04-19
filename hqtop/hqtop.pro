@@ -27,6 +27,7 @@ SOURCES += \
     resourceanalyzer.cpp \
     resourcewidget.cpp \
     setting.cpp \
+    settingwidget.cpp \
     systemdataprovider.cpp \
     systemresource.cpp \
     widget.cpp
@@ -42,12 +43,14 @@ HEADERS += \
     resourceanalyzer.h \
     resourcewidget.h \
     setting.h \
+    settingwidget.h \
     systemdataprovider.h \
     systemresource.h \
     widget.h
 
 FORMS += \
     resourcewidget.ui \
+    settingwidget.ui \
     widget.ui
 
 TRANSLATIONS += \
