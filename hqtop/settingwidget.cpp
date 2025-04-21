@@ -11,7 +11,6 @@ SettingWidget::SettingWidget(Setting *setting, QWidget *parent) :
     this->theme = this->setting->load<QString>("Theme/Name","Daytime");
     this->logLevel = this->setting->load<QString>("Log/Level","debug");
 
-
     if(this->theme == "Daytime")
         ui->DayModeRadioButton->setChecked(true);
     else if(this->theme == "Night")
@@ -39,7 +38,6 @@ void SettingWidget::on_LogLevelComboBox_currentTextChanged(const QString &arg1)
         this->newLogLevel = "";
         ui->applyPushButton->setEnabled(false);
     }
-
 }
 
 void SettingWidget::on_applyPushButton_clicked()

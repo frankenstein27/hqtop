@@ -8,7 +8,8 @@
 /* 由于本类涉及到对 UI 的操作 因此无法在子进程中运行，但是可以把耗时操作（如过滤、排序）操作在子线程完成再传回来
  *
  */
-ProcessTableModel::ProcessTableModel(ProcessManager *processmanager, QObject *parent)
+ProcessTableModel::ProcessTableModel(Setting *setting,ProcessManager
+                                            *processmanager, QObject *parent)
     : QAbstractTableModel(parent)
     , manager(processmanager)
     , m_sortOrder(Qt::AscendingOrder)
@@ -18,10 +19,16 @@ ProcessTableModel::ProcessTableModel(ProcessManager *processmanager, QObject *pa
     , m_filterText("")
     , m_checkedProcess(-1)
     , mylogger(spdlog::get("global_logger"))
+    , m_setting(setting)
 {
     // 关联：进程信息更新信号（来自ProcessManager），由 onProcessesUpdate 处理
     connect(this->manager, &ProcessManager::processesUpdated,this,
             &ProcessTableModel::onProcessesUpdate, Qt::QueuedConnection);
+
+    // 初始化列名
+    changeColumn();
+    QString tmp = this->m_setting->load<QString>("Sort/Name");
+    this->m_sortedColumn = m_columnName.indexOf(tmp);
 
     // 初始化线程和排序工作函数
     this->m_sortThread = new QThread(this);
@@ -75,14 +82,16 @@ void ProcessTableModel::onProcessesUpdate(QList<ProcessInfo> processes)
             process = processes[i];
             if(process.getCpuUsage() >= 8)
             {
-                log_str = "High Cpu Usage! Pid: " + QString::number(process.getPid()) + " Name: "
-                        + process.getName() + " Cpu Usage: " + QString::number(process.getCpuUsage()) + "%";
+                log_str = "High Cpu Usage! Pid: " + QString::number(process.getPid()) +
+                        "===Name: "+ process.getName() +
+                        "===Cpu Usage: " + QString::number(process.getCpuUsage()) + "%";
                 mylogger->warn(log_str.toStdString());
             }
             if(process.getMemoryUsage() >= 800)
             {
-                log_str = "High Memory Used! Pid: " + QString::number(process.getPid()) + " Name: "
-                        + process.getName() + " Memory Used: " + QString::number(process.getMemoryUsage()) + "MB";
+                log_str = "High Memory Used! Pid: " + QString::number(process.getPid()) +
+                        "===Name: " + process.getName() +
+                        "===Memory Used: " + QString::number(process.getMemoryUsage()) + "MB";
             }
 
             if (m_originalProcesses[i] != process)
@@ -176,6 +185,12 @@ void ProcessTableModel::onFilterFinished(QList<ProcessInfo> filteredProcesses)
 // 排序：因为不能直接在此类中开启子线程，所以在 sort 中调用 async 异步函数，异步函数中排序逻辑在子线程中完成
 void ProcessTableModel::sort(int column, Qt::SortOrder order)
 {
+    if(m_sortedColumn != column)
+    {
+        mylogger->debug("sort was triggered,sort factor: " + m_columnName[column].toStdString());
+        m_setting->save("Sort/Name", m_columnName[column]);
+    }
+
     // 保存排序配置
     m_sortedColumn = column;
     m_sortOrder = order;
@@ -217,6 +232,13 @@ void ProcessTableModel::onSortFinished(QList<ProcessInfo> sortedProcesses,bool i
 
     // 结束试图模型更新
     endResetModel();
+}
+
+// （暂未实现）自定义列数据
+void ProcessTableModel::changeColumn()
+{
+    // 用 append 也可以
+    m_columnName << "Pid" << "Name" << "User" << "State" << "CPU%" << "Memory";
 }
 
 
@@ -319,29 +341,17 @@ QVariant ProcessTableModel::headerData(int section, Qt::Orientation orientation,
         return QVariant();
     if(orientation == Qt::Horizontal)
     {
-        switch (section)
+        if(section < 6)
         {
-            case 0:
-                return tr("Pid");
-            case 1:
-                return tr("Name");
-            case 2:
-                return tr("User");
-            case 3:
-                return tr("State");
-            case 4:
-                return tr("CPU%");
-            case 5:
-                return tr("Mem");
-            default:
-                return QVariant();
+            return m_columnName[section];
         }
+        else
+            return QVariant();
     }
     else
     {
         return QString("%1").arg(section+1);
     }
-
     return QVariant();
 }
 

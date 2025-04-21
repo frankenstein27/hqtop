@@ -14,6 +14,7 @@ Setting::Setting() :
     }
     // 立即写入磁盘
     settings.sync();
+
 }
 
 void Setting::save(const QString& key, const QVariant& value)

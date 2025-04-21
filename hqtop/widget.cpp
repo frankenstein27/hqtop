@@ -15,27 +15,27 @@ Widget::Widget(QWidget *parent)
     // 启用 tableView 排序功能
     ui->processesTableView->setSortingEnabled(true);
 
-    // 初始化日志
-    this->logger = new Logger();
     // 初始化设置
     this->setting = new Setting();
+    // 初始化日志
+    this->logger = new Logger(setting);
 
     // 获取设置中的窗口等默认配置
     int windowWidth = setting->load("Window/Width", 860);
     QString theme = setting->load<QString>("Theme/Name", "Daytime");
     int windowHeight = setting->load<int>("Window/Height", 720);
 
-    qDebug() << "theme: " << theme;
+//    qDebug() << "theme: " << theme;
 
     QPalette mainPal(this->palette());
     if(theme == "Daytime")
     {
-        qDebug() << "theme is Daytime Mode";
+//        qDebug() << "theme is Daytime Mode";
         mainPal.setColor(QPalette::Background, QColor(223, 234, 242));
     }
     else if(theme == "Night")
     {
-        qDebug() << "theme is Light Mode";
+//        qDebug() << "theme is Light Mode";
         mainPal.setColor(QPalette::Background, QColor(32, 32, 32));
     }
     this->setAutoFillBackground(true);
@@ -49,9 +49,10 @@ Widget::Widget(QWidget *parent)
     this->dataCollector = new DataCollector(this->dataprovider);
     this->processmanager = new ProcessManager();
     this->resourceanalyzer = new ResourceAnalyzer();
-    this->myTableModel = new ProcessTableModel(this->processmanager, ui->processesTableView);
+    this->myTableModel = new ProcessTableModel(setting, this->processmanager, ui->processesTableView);
     this->resourceWidget = new ResourceWidget(this->resourceanalyzer);
     this->settingWidget = new SettingWidget(setting);
+
 
     // 启动程序即开始收集数据
 
@@ -134,11 +135,10 @@ Widget::Widget(QWidget *parent)
                     this, &Widget::onProcessesPageShow);
 
     /* 8.设置中日志等级改变
-     *
+     *  日志等级改变信号 由 settingWidget 的 logLevelChanged 发出，Logger的 logLevelChangedHandle 接收
      */
     connect(this->settingWidget, &SettingWidget::logLevelChanged,
                     this->logger, &Logger::logLevelChangedHandle);
-
 
     // 启动收集者 指定时间间隔为1000 ms
     dataCollector->startCollection(1000);

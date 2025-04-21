@@ -15,16 +15,22 @@ class ProcessTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    ProcessTableModel(ProcessManager *processmanager,QObject *parent);
+    ProcessTableModel(Setting *setting,ProcessManager *processmanager,QObject *parent);
     ~ProcessTableModel();
 
+    // 行数
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    // 列数
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+    // 部署数据
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole | Qt::BackgroundRole) const override;
+    // 表头
     QVariant headerData(int section, Qt::Orientation orientation,int role = Qt::DisplayRole)
                                                                         const override;
-
+    // 排序
     void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
+
+    void changeColumn();
 
 public slots:
     // 筛选因子发生改变 传递筛选因子
@@ -80,6 +86,10 @@ private:
     qint64 m_checkedProcess;
     // 日志
     std::shared_ptr<spdlog::logger> mylogger;
+    // 列名
+    QVector<QString> m_columnName;
+    // 设置
+    Setting *m_setting;
 };
 
 #endif // PROCESSTABLEMODEL_H
