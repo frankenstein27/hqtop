@@ -52,6 +52,8 @@ Logger::Logger(Setting *setting) :
             this->spd_logger->set_level(spdlog::level::warn);
         }
 
+        spd_logger->debug("current log level is:" + currentLevel.toStdString());
+
         // 配置自动刷新
         spdlog::flush_every(std::chrono::seconds(5));
     }

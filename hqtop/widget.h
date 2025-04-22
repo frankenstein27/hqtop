@@ -62,8 +62,10 @@ private:
     SettingWidget *settingWidget;
     // 日志
     Logger *logger;
+    std::shared_ptr<spdlog::logger> mylogger;
     // 设置
     Setting *setting;
+
 
 };
 #endif // WIDGET_H

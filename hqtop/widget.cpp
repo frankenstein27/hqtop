@@ -19,6 +19,9 @@ Widget::Widget(QWidget *parent)
     this->setting = new Setting();
     // 初始化日志
     this->logger = new Logger(setting);
+    this->mylogger = spdlog::get("global_logger");
+
+    mylogger->debug("this is a widget's test info");
 
     // 获取设置中的窗口等默认配置
     int windowWidth = setting->load("Window/Width", 860);
@@ -140,8 +143,12 @@ Widget::Widget(QWidget *parent)
     connect(this->settingWidget, &SettingWidget::logLevelChanged,
                     this->logger, &Logger::logLevelChangedHandle);
 
-    // 启动收集者 指定时间间隔为1000 ms
-    dataCollector->startCollection(1000);
+    int interval_time = setting->load<int>("Timer(ms)/interval time");
+
+    mylogger->debug("current interval_time is: " + QString::number(interval_time).toStdString() + "ms");
+
+    // 启动收集者 指定时间间隔为 interval_time
+    dataCollector->startCollection(interval_time);
 
     // 将 TableView 的内容显示出来
     ui->processesTableView->setModel(this->myTableModel);
@@ -183,6 +190,7 @@ void Widget::onProcessesPageShow()
         emit this->processesPageShow();
     }
 }
+
 
 void Widget::on_resourcePagePushButton_clicked()
 {

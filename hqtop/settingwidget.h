@@ -5,6 +5,8 @@
 #include <QDebug>
 #include <QMessageBox>
 
+#include <spdlog/spdlog.h>
+
 #include "setting.h"
 
 namespace Ui {
@@ -27,6 +29,8 @@ private slots:
 
     void on_cancelPushButton_clicked();
 
+    void on_DueDateComboBox_currentTextChanged(const QString &arg1);
+
 signals:
     void logLevelChanged(QString newLevel);
 
@@ -35,9 +39,14 @@ private:
     Setting *setting;
     QString theme;
     QString logLevel;
+    int m_interval_time;
 
     QString newTheme;
     QString newLogLevel;
+    int m_newInterval_time;
+    // 日志
+    std::shared_ptr<spdlog::logger> mylogger;
+
 };
 
 #endif // SETTINGWIDGET_H

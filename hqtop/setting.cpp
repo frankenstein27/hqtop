@@ -11,6 +11,7 @@ Setting::Setting() :
         settings.setValue("Window/Height", 768);
         settings.setValue("Theme/Name", "Daytime");
         settings.setValue("Log/Level","debug");
+        settings.setValue("Timer/interval time",1000);
     }
     // 立即写入磁盘
     settings.sync();
