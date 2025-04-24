@@ -12,8 +12,8 @@ ProcessTableModel::ProcessTableModel(Setting *setting,ProcessManager
                                             *processmanager, QObject *parent)
     : QAbstractTableModel(parent)
     , manager(processmanager)
-    , m_sortOrder(Qt::AscendingOrder)
     , m_sortedColumn(-1)
+    , m_sortOrder(Qt::AscendingOrder)
     , m_isMsgBox(false)
     , m_filterFactor("pid")
     , m_filterText("")
@@ -83,15 +83,15 @@ void ProcessTableModel::onProcessesUpdate(QList<ProcessInfo> processes)
             if(process.getCpuUsage() >= 8)
             {
                 log_str = "High Cpu Usage! Pid: " + QString::number(process.getPid()) +
-                        "===Name: "+ process.getName() +
-                        "===Cpu Usage: " + QString::number(process.getCpuUsage()) + "%";
+                        "   Name: "+ process.getName() +
+                        "   Cpu Usage: " + QString::number(process.getCpuUsage()) + "%";
                 mylogger->warn(log_str.toStdString());
             }
             if(process.getMemoryUsage() >= 800)
             {
                 log_str = "High Memory Used! Pid: " + QString::number(process.getPid()) +
-                        "===Name: " + process.getName() +
-                        "===Memory Used: " + QString::number(process.getMemoryUsage()) + "MB";
+                        "   Name: " + process.getName() +
+                        "   Memory Used: " + QString::number(process.getMemoryUsage()) + "MB";
             }
 
             if (m_originalProcesses[i] != process)
@@ -216,7 +216,7 @@ void ProcessTableModel::requestAsyncSort(int column, Qt::SortOrder order)
 
 
 // 排序完成接收的槽函数
-void ProcessTableModel::onSortFinished(QList<ProcessInfo> sortedProcesses,bool isMsgBox,int column)
+void ProcessTableModel::onSortFinished(QList<ProcessInfo> sortedProcesses,int column)
 {
     // 通知视图即将更新
     beginResetModel();
@@ -258,8 +258,6 @@ void ProcessTableModel::onDeletePushButtonClicked()
                                                                   QMessageBox::Ok | QMessageBox::Cancel);
         if(result == QMessageBox::Ok)
         {
-            QString str = "Process " + QString::number(m_checkedProcess) + " was killed!";
-            mylogger->warn(str.toStdString());
             this->manager->killProcess(m_checkedProcess);
         }
         else if(result == QMessageBox::Cancel)
@@ -283,13 +281,13 @@ QVariant ProcessTableModel::data(const QModelIndex &index, int role) const
     {
         if(process.getCpuUsage() >= 10 || process.getMemoryUsage() >= 800)
             return QBrush(QColor(218, 69, 9));
-        else
-        {
-            if(index.row() % 2)
-                return QBrush(QColor(192, 192, 192));
-            else
-                return QBrush(QColor(3, 131, 135));
-        }
+//        else
+//        {
+//            if(index.row() % 2)
+//                return QBrush(QColor(192, 192, 192));
+//            else
+//                return QBrush(QColor(3, 131, 135));
+//        }
     }
 
 

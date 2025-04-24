@@ -16,6 +16,7 @@ ProcessManager::~ProcessManager()
     this->m_workerThread.wait();
 }
 
+
 QList<ProcessInfo>& ProcessManager::getProcesses()
 {
     return this->m_processes;

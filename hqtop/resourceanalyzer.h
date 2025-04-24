@@ -16,22 +16,12 @@ class ResourceAnalyzer : public QObject
 public:
     ResourceAnalyzer();
 
-
-    // 添加历史数据记录点
-    void addDataPoint(const SystemResource& sysRes);
-    // 获取cpu历史数据
-    void getCpuHistory();
-    // 获取内存历史数据
-    void getMemoryHistory();
-
-    SystemResource& getLatestSystemResource();
 public slots:
     void handleSystemResourceUpdate(const SystemResource& sysRes);
 
 
 signals:
     void systemResourceUpdate(SystemResource newSystemResource);
-//    void systemResourceUpdate(QQueue<SystemResource> newSystemResourceQueue);
 
 private:
 

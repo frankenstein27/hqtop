@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>styles/day.qss</file>
+        <file>styles/night.qss</file>
+    </qresource>
+</RCC>

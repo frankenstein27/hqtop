@@ -4,15 +4,16 @@
  *
  */
 
-LinuxDataProvider::LinuxDataProvider()
+LinuxDataProvider::LinuxDataProvider() :
+    isGetToalMem(false)
+  , totalMemoryInKiloBytes(-1)
+  , m_prevTotalCpu(-1)
+  , m_prevIdleCpu(-1)
+  , m_diffCpuTime(-1)
+  , m_KernelPageSize(-1)
+  , mylogger(spdlog::get("global_logger"))
 {
     this->processIDs = new QList<qint64>();     // 分配内存
-    this->m_prevIdleCpu = -1;
-    this->m_prevTotalCpu = -1;
-    this->m_diffCpuTime = -1;
-    this->isGetToalMem = false;
-    this->totalMemoryInKiloBytes = -1;
-    this->m_KernelPageSize = -1;
 
     this->getKernelPageSize();
     this->getUserIdMap();
@@ -38,6 +39,7 @@ LinuxDataProvider& LinuxDataProvider::operator=(const LinuxDataProvider &other)
     return *this;
 }
 
+// 获取进程列表
 QList<ProcessInfo> LinuxDataProvider::getProcessList()
 {
     QList<ProcessInfo> processesInfo;
@@ -63,7 +65,7 @@ QList<ProcessInfo> LinuxDataProvider::getProcessList()
         file.setFileName(statusFile);
         if(!file.open(QFile::ReadOnly | QFile::Text))
         {
-            qDebug() << "open file " << statusFile << "wrong!";
+            mylogger->warn("open file " + statusFile.toStdString() + "wrong!");
         }
         else
         {
@@ -90,17 +92,17 @@ QList<ProcessInfo> LinuxDataProvider::getProcessList()
         file.setFileName(statFile);
         if(!file.open(QFile::ReadOnly | QFile::Text))
         {
-            qDebug() << "open file " << statFile << "wrong!";
+            mylogger->warn("open file " + statFile.toStdString() + "wrong!");
         }
         else
         {
             QTextStream in(&file);
             QString msg = in.readAll();
             QStringList msgList = msg.split(' ');
-            processinfo.setPid(msgList[0].toInt());                                                 // pid
-            processinfo.setName(msgList[1].remove('(').remove(')'));                                // name
-            processinfo.setMemoryUsage(msgList[23].toInt() * this->m_KernelPageSize / 1024);        // memory
-            processinfo.setState(msgList[2]);                                                       // state
+            processinfo.setPid(msgList[0].toInt());                                             // pid
+            processinfo.setName(msgList[1].remove('(').remove(')'));                            // name
+            processinfo.setMemoryUsage(msgList[23].toInt() * this->m_KernelPageSize / 1024);    // memory
+            processinfo.setState(msgList[2]);                                                   // state
             // cpu 占用率（百分比） --- 两次采样---
             currentTime = msgList[13].toDouble() +
                     msgList[14].toDouble() +
@@ -125,6 +127,9 @@ QList<ProcessInfo> LinuxDataProvider::getProcessList()
     }
     return processesInfo;
 }
+
+
+// 获取系统资源
 SystemResource* LinuxDataProvider::getSystemResource()
 {
     SystemResource *sysRes = new SystemResource;
@@ -133,7 +138,7 @@ SystemResource* LinuxDataProvider::getSystemResource()
     file.setFileName("/proc/meminfo");
     if(!file.open(QFile::ReadOnly | QFile::Text))
     {
-        qDebug() << "open file /proc/meminfo wrong!";
+        mylogger->warn("open file /proc/meminfo wrong!");
     }
     else
     {
@@ -198,7 +203,7 @@ SystemResource* LinuxDataProvider::getSystemResource()
     file.setFileName("/proc/uptime");
     if(!file.open(QFile::ReadOnly | QFile::Text))
     {
-        qDebug() << "open file /proc/meminfo wrong!";
+        mylogger->warn("open file /proc/meminfo wrong!");
     }
     else
     {
@@ -208,7 +213,6 @@ SystemResource* LinuxDataProvider::getSystemResource()
         double temp = lineMsg.split(' ')[0].toDouble();
         QString upTime = this->formatTime(temp);
         sysRes->setUpTime(upTime);
-//        qDebug() << "upTime: " << upTime;
 
         file.close();
     }
@@ -217,7 +221,7 @@ SystemResource* LinuxDataProvider::getSystemResource()
     file.setFileName("/proc/stat");
     if(!file.open(QFile::ReadOnly | QFile::Text))
     {
-        qDebug() << "open file /proc/stat wrong!";
+        mylogger->warn("open file /proc/stat wrong!");
     }
     else
     {
@@ -244,16 +248,21 @@ SystemResource* LinuxDataProvider::getSystemResource()
     }
     return sysRes;
 }
+
+// 杀死进程
 bool LinuxDataProvider::killProcess(qint64 pid)
 {
-//    qDebug() << "pid: " << pid << "was killed.";
     QString command = QString("kill -9 %1").arg(pid);
 
     system(command.toLocal8Bit().data());
 
+    QString str = "Process " + QString::number(pid) + " was killed!";
+    mylogger->warn(str.toStdString());
+
     return false;
 }
 
+// 获取进程列表
 void LinuxDataProvider::getAllProcess()
 {
     this->processIDs->clear();
@@ -262,7 +271,7 @@ void LinuxDataProvider::getAllProcess()
     // 判断目录是否存在
     if(!dir.exists())
     {
-        qDebug() << "dir /proc is not exist.目录 /proc 不存在";
+        mylogger->warn("dir /proc is not exist.");
     }
     // 获取文件信息列表
     QFileInfoList filesInfoList = dir.entryInfoList();
@@ -270,7 +279,7 @@ void LinuxDataProvider::getAllProcess()
     int fileCount = filesInfoList.count();
     if(fileCount <= 0)
     {
-        qDebug() << "floder is empty. 目录为空";
+        mylogger->warn("dir /proc is empty.");
     }
     bool ok = false;
     qint64 dec = 0;
@@ -284,21 +293,20 @@ void LinuxDataProvider::getAllProcess()
         QString basename = fileInfo.baseName();
         // 将名字转为 int 型
         dec = basename.toInt(&ok,10);
-//        if(ok)
-//        {
-//            qDebug() << "dec:" << dec;
-//        }
         if(dec)
             this->processIDs->push_back(dec);
     }
 }
+
+
+// 获取当前内核页面大小
 void LinuxDataProvider::getKernelPageSize()
 {
     QFile file;
     file.setFileName("/proc/self/smaps");
     if(!file.open(QFile::ReadOnly | QFile::Text))
     {
-        qDebug() << "open file /proc/self/smaps wrong!";
+        mylogger->warn("open file /proc/self/smaps wrong!");
     }
     else
     {
@@ -318,6 +326,7 @@ void LinuxDataProvider::getKernelPageSize()
     }
 }
 
+// 获取 cpu 核心数量
 qint64 LinuxDataProvider::getCpuNum()
 {
     if(this->cpuNum)
@@ -328,7 +337,7 @@ qint64 LinuxDataProvider::getCpuNum()
         file.setFileName("/proc/cpuinfo");
         if(!file.open(QFile::ReadOnly | QFile::Text))
         {
-            qDebug() << "open file /proc/cpuinfo wrong!";
+            mylogger->warn("open file /proc/cpuinfo wrong!");
         }
         else
         {
@@ -378,6 +387,7 @@ double* LinuxDataProvider::getCpuTotalTime()
 }
 */
 
+// 格式化系统启动时间
 QString LinuxDataProvider::formatTime(double temp)
 {
     int second = (int)temp++;
@@ -405,6 +415,7 @@ QString LinuxDataProvider::formatTime(double temp)
             .arg(seconds, 2, 10, QLatin1Char('0'));
 }
 
+// 将进程信息中的 id 通过 passwd 文件映射为用户名
 void LinuxDataProvider::getUserIdMap()
 {
     // 读取 /etc/passwd 文件
@@ -413,7 +424,7 @@ void LinuxDataProvider::getUserIdMap()
     QStringList userInfoList;
     if(!file.open(QFile::ReadOnly | QFile::Text))
     {
-        qDebug() << "open file /etc/passwd wrong!";
+        mylogger->warn("open file /etc/passwd wrong!");
     }
     else
     {

@@ -46,7 +46,7 @@ private slots:
     // 进程数据更新 信号由 processmanager 发来
     void onProcessesUpdate(QList<ProcessInfo> processes);
     // 排序完成
-    void onSortFinished(QList<ProcessInfo> sortedProcesses,bool isMsgBox,int column);
+    void onSortFinished(QList<ProcessInfo> sortedProcesses,int column);
     // 过滤完成
     void onFilterFinished(QList<ProcessInfo> filteredProcesses);
 

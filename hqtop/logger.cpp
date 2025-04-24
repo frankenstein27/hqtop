@@ -2,8 +2,6 @@
 
 #include <QDebug>
 #include <QDir>
-#include <string>
-
 
 Logger::Logger(Setting *setting) :
     m_setting(setting)
@@ -51,25 +49,20 @@ Logger::Logger(Setting *setting) :
         {
             this->spd_logger->set_level(spdlog::level::warn);
         }
-
-        spd_logger->debug("current log level is:" + currentLevel.toStdString());
-
         // 配置自动刷新
         spdlog::flush_every(std::chrono::seconds(5));
     }
     catch (const spdlog::spdlog_ex& ex)
     {
-        qDebug() << "Log init failed: " << ex.what();
+        std::string tmpStr = ex.what();
+        this->spd_logger->warn("Log init failed: " + tmpStr);
         throw;
     }
-
-    std::string tmp = "current path: " + QDir::currentPath().toStdString();
-    spd_logger->info(tmp);
 }
 
+// 日志等级更新
 void Logger::logLevelChangedHandle(QString newLevel)
 {
-//    qDebug() << "received new log level: " << newLevel;
     if(newLevel == "trace")
     {
         this->spd_logger->set_level(spdlog::level::trace);
@@ -101,6 +94,7 @@ void Logger::logLevelChangedHandle(QString newLevel)
 }
 
 
+// 安全、完整的释放
 void Logger::shutdown_logger()
 {
     spdlog::drop("global_logger");  // 显式释放

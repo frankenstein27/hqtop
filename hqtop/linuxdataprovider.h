@@ -8,6 +8,8 @@
 #include <QTextStream>
 #include <QMap>
 
+#include <spdlog/spdlog.h>
+
 #include "systemdataprovider.h"
 
 // 实现 Linux 平台 获取相关数据
@@ -50,6 +52,8 @@ private:
 
     // 页面大小 KB
     short m_KernelPageSize;
+    // 日志
+    std::shared_ptr<spdlog::logger> mylogger;
 };
 
 #endif // LINUXDATAPROVIDER_H

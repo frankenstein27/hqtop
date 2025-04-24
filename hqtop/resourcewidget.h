@@ -7,6 +7,8 @@
 #include <QLineSeries>
 #include <QQueue>
 
+#include <spdlog/spdlog.h>
+
 #include "resourceanalyzer.h"
 #include "systemresource.h"
 
@@ -67,6 +69,10 @@ private:
     QValueAxis *memoryAxisY;
     double memoryTotal;
     QQueue<double> memoryHistory;
+
+    // 日志
+    std::shared_ptr<spdlog::logger> mylogger;
+    bool isWarn;
 };
 
 #endif // RESOURCEWIDGET_H

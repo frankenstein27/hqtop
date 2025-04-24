@@ -9,23 +9,20 @@
 
 ResourceWidget::ResourceWidget(ResourceAnalyzer *resourceanalyzer,QWidget *parent) :
     QWidget(parent)
-  , m_resourceanalyzer(resourceanalyzer)
   , ui(new Ui::ResourceWidget)
+  , m_resourceanalyzer(resourceanalyzer)
   , memoryTotal(-1)
+  , mylogger(spdlog::get("global_logger"))
+  , isWarn(false)
 {
     ui->setupUi(this);
 
     QPalette resPal(this->palette());
-    resPal.setColor(QPalette::Background, QColor(223, 234, 242));
     this->setAutoFillBackground(true);
     this->setPalette(resPal);
 
-
-
     connect(this->m_resourceanalyzer, &ResourceAnalyzer::systemResourceUpdate,
                     this, &ResourceWidget::onSystemResourceUpdate);
-
-
 
     // 绘图
     try {
@@ -96,17 +93,15 @@ ResourceWidget::ResourceWidget(ResourceAnalyzer *resourceanalyzer,QWidget *paren
         memoryChart->setPalette(cpuPal);
 
     } catch (std::exception &e) {
-        qDebug() << "e: " << e.what() ;
+        QString tmp = e.what();
+        mylogger->error("draw table err:" + tmp.toStdString());
     }
-
-
 }
 
 void ResourceWidget::onSystemResourceUpdate(SystemResource newSystemResource)
 {
     this->m_sysResource = newSystemResource;
     // 调用绘图数据更新函数
-    // 此处加上条件判断语句，即可实现用户设置是否在后台绘制cpu和mem利用率
     this->updateGraphHistory();
 
     emit systemResourceUpdate(m_sysResource);
@@ -138,6 +133,11 @@ void ResourceWidget::updateGraphHistory()
     }
     if(this->cpuHistory.size() >= SYSRESOUCE_SZ)
     {
+        if(!isWarn)
+        {
+            mylogger->warn("cpu history and memory history exceeded the limit. exec pop_front...");
+            isWarn = true;
+        }
         this->cpuHistory.pop_front();
         this->memoryHistory.pop_front();
     }

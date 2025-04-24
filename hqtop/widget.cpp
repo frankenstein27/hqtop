@@ -14,6 +14,8 @@ Widget::Widget(QWidget *parent)
 
     // 启用 tableView 排序功能
     ui->processesTableView->setSortingEnabled(true);
+    ui->processesTableView->setAlternatingRowColors(true);
+    ui->processesTableView->setStyleSheet("");
 
     // 初始化设置
     this->setting = new Setting();
@@ -21,26 +23,14 @@ Widget::Widget(QWidget *parent)
     this->logger = new Logger(setting);
     this->mylogger = spdlog::get("global_logger");
 
-    mylogger->debug("this is a widget's test info");
-
     // 获取设置中的窗口等默认配置
     int windowWidth = setting->load("Window/Width", 860);
     QString theme = setting->load<QString>("Theme/Name", "Daytime");
     int windowHeight = setting->load<int>("Window/Height", 720);
 
-//    qDebug() << "theme: " << theme;
-
     QPalette mainPal(this->palette());
-    if(theme == "Daytime")
-    {
-//        qDebug() << "theme is Daytime Mode";
-        mainPal.setColor(QPalette::Background, QColor(223, 234, 242));
-    }
-    else if(theme == "Night")
-    {
-//        qDebug() << "theme is Light Mode";
-        mainPal.setColor(QPalette::Background, QColor(32, 32, 32));
-    }
+
+    loadTheme(theme);
     this->setAutoFillBackground(true);
     this->setPalette(mainPal);
 
@@ -143,9 +133,14 @@ Widget::Widget(QWidget *parent)
     connect(this->settingWidget, &SettingWidget::logLevelChanged,
                     this->logger, &Logger::logLevelChangedHandle);
 
-    int interval_time = setting->load<int>("Timer(ms)/interval time");
 
-    mylogger->debug("current interval_time is: " + QString::number(interval_time).toStdString() + "ms");
+    /*
+     *
+     */
+    connect(this->settingWidget, &SettingWidget::themeChanged,
+                    this, &Widget::loadTheme);
+
+    int interval_time = setting->load<int>("Timer(ms)/interval time");
 
     // 启动收集者 指定时间间隔为 interval_time
     dataCollector->startCollection(interval_time);
@@ -209,4 +204,24 @@ void Widget::on_settingsButton_clicked()
     // 设置子窗口模态：子窗口存在时不能操作父窗口
     this->settingWidget->setWindowModality(Qt::ApplicationModal);
     this->settingWidget->show();
+}
+
+void Widget::loadTheme(QString newTheme)
+{
+    QString path;
+    if(newTheme == "Daytime")
+    {
+        path = ":/styles/day.qss";
+    }
+    else if(newTheme == "Nighttime")
+    {
+        path = ":/styles/night.qss";
+    }
+    QFile qssFile(path);
+    if(qssFile.open(QIODevice::ReadOnly))
+    {
+        mylogger->trace("read qss file:" + path.toStdString() + " successfully.");
+        qApp->setStyleSheet(qssFile.readAll());
+        qssFile.close();
+    }
 }

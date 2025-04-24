@@ -7,6 +7,7 @@
 DataCollector::DataCollector(SystemDataProvider *provider,QObject *parent) :
     m_provider(provider)
   , m_sysResourceReceiver(true)     // 启动时默认为进程页显示
+  , mylogger(spdlog::get("global_logger"))
 {
     this->moveToThread(&m_workerThread);
 }
@@ -17,8 +18,10 @@ DataCollector::~DataCollector()
     this->stopCollection();
     this->m_workerThread.quit();
     this->m_workerThread.wait();
+    mylogger->trace("data collector was deleted.");
 }
 
+// 开始收集数据，指定刷新间隔
 void DataCollector::startCollection(int intervalMs)
 {
     m_workerThread.start();
@@ -29,6 +32,8 @@ void DataCollector::startCollection(int intervalMs)
         // 保证只开启一个定时器 也保证只通知线程启动一次
         if(!this->m_timer)
         {
+            mylogger->trace("timer starts,the refresh interval is:" +
+                                    QString::number(intervalMs).toStdString() + "ms");
             this->m_timer = new QTimer();
             // 将定时器对象移动至子线程中
             m_timer->moveToThread(&m_workerThread);
@@ -39,12 +44,14 @@ void DataCollector::startCollection(int intervalMs)
     }
 }
 
+// 刷新数据
 void DataCollector::fetchData()
 {
     if(!m_running)
     {
         return;
     }
+//    mylogger->trace("data collector is fetching data.");
 
     // 如果当前为进程页，则需要进程信息和系统信息（默认为此分支）
     if(this->m_sysResourceReceiver)
@@ -66,17 +73,23 @@ void DataCollector::fetchData()
     }
 }
 
+// 停止收集数据
 void DataCollector::stopCollection()
 {
+    mylogger->trace("stop collecting data.");
     m_running = false;
 }
 
+// 隐藏进程页
 void DataCollector::onProcessesPageHide()
 {
+    mylogger->trace("processes page is hidden.");
     this->m_sysResourceReceiver = false;
 }
 
+// 显示进程页
 void DataCollector::onProcessesPageShow()
 {
+    mylogger->trace("processes page display.");
     this->m_sysResourceReceiver = true;
 }

@@ -1,5 +1,7 @@
 #include "setting.h"
 
+#include <iostream>
+
 Setting::Setting() :
 // 初始化 QSetting，指定组织名和应用名（影响存储路径,Linux下为 ～/.config/HeBo/hqtop.ini），设置格式为 INI 格式
     settings(QSettings::IniFormat, QSettings::UserScope, "HeBo", "hqtop")
@@ -15,15 +17,12 @@ Setting::Setting() :
     }
     // 立即写入磁盘
     settings.sync();
-
 }
 
 void Setting::save(const QString& key, const QVariant& value)
 {
     settings.setValue(key, value);
-//    qDebug() << "set new value successfully:" << key << " -> " << value;
 }
-
 
 Setting::~Setting()
 {

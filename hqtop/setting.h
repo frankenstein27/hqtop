@@ -4,6 +4,9 @@
 #include <QVariant>
 #include <QSettings>
 #include <QDebug>
+#include <QFile>
+
+#include <spdlog/spdlog.h>
 
 class Setting
 {

@@ -5,6 +5,7 @@
 #include <QThread>
 #include <QObject>
 #include <QTimer>
+#include <spdlog/spdlog.h>
 
 #include "systemdataprovider.h"
 
@@ -43,6 +44,9 @@ private:
     qint64 m_intervalMs;
     // 节约空间 用true表示进程页正在显示，系统页未在显示；false表示进程页未在显示，系统页正在显示
     bool m_sysResourceReceiver;
+
+    // 日志
+    std::shared_ptr<spdlog::logger> mylogger;
 };
 
 #endif // DATACOLLECTOR_H

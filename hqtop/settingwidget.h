@@ -31,18 +31,22 @@ private slots:
 
     void on_DueDateComboBox_currentTextChanged(const QString &arg1);
 
+    void on_NightModeRadioButton_toggled(bool checked);
+
 signals:
     void logLevelChanged(QString newLevel);
+    void themeChanged(QString newTheme);
 
 private:
     Ui::SettingWidget *ui;
     Setting *setting;
-    QString theme;
-    QString logLevel;
+    QString m_themeMode;
+    QString m_logLevel;
     int m_interval_time;
+    QString m_curThemeMode;
 
-    QString newTheme;
-    QString newLogLevel;
+    QString m_newLogLevel;
+    QString m_newThemeMode;
     int m_newInterval_time;
     // 日志
     std::shared_ptr<spdlog::logger> mylogger;
