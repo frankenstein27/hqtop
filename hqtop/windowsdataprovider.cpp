@@ -1,8 +1,12 @@
 #include "windowsdataprovider.h"
 
+#ifdef Q_OS_WIN
+
 #include <windows.h>
 #include <tlhelp32.h>
 #include <psapi.h>
+
+#endif
 
 
 WindowsDataProvider::WindowsDataProvider()

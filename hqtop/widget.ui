@@ -167,7 +167,7 @@
           <item>
            <widget class="QLabel" name="processesNumberLabel">
             <property name="text">
-             <string>TextLabel</string>
+             <string>0</string>
             </property>
            </widget>
           </item>
@@ -189,7 +189,7 @@
           <item>
            <widget class="QLabel" name="cpuLabel">
             <property name="text">
-             <string>TextLabel</string>
+             <string>0.00</string>
             </property>
            </widget>
           </item>
@@ -207,7 +207,7 @@
           <item>
            <widget class="QLabel" name="swapUsedLabel">
             <property name="text">
-             <string>TextLabel</string>
+             <string>0</string>
             </property>
            </widget>
           </item>
@@ -225,7 +225,7 @@
           <item>
            <widget class="QLabel" name="swapTotalLabel">
             <property name="text">
-             <string>TextLabel</string>
+             <string>0</string>
             </property>
            </widget>
           </item>
@@ -243,7 +243,7 @@
           <item>
            <widget class="QLabel" name="memTotalLabel">
             <property name="text">
-             <string>TextLabel</string>
+             <string>0</string>
             </property>
            </widget>
           </item>
@@ -261,7 +261,7 @@
           <item>
            <widget class="QLabel" name="memUsedLabel">
             <property name="text">
-             <string>TextLabel</string>
+             <string>0</string>
             </property>
            </widget>
           </item>
@@ -279,7 +279,7 @@
           <item>
            <widget class="QLabel" name="upTimeLabel">
             <property name="text">
-             <string>TextLabel</string>
+             <string>0</string>
             </property>
            </widget>
           </item>
