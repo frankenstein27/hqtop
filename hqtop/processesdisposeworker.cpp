@@ -6,27 +6,27 @@ ProcessesDisposeWorker::ProcessesDisposeWorker(QObject *parent) : QObject(parent
 }
 
 // 过滤函数
-void ProcessesDisposeWorker::filterProcesses(QList<ProcessInfo> processesWaitFilter,
+void ProcessesDisposeWorker::filterProcesses(QList<LinuxProcessInfo> processesWaitFilter,
                                                 QString filterFactor,QString filterText)
 {
-    QList<ProcessInfo> filteredProcesses;
+    QList<LinuxProcessInfo> filteredProcesses;
     bool match;
 
-    for(const ProcessInfo& process : processesWaitFilter)
+    for(const LinuxProcessInfo& process : processesWaitFilter)
     {
         // 根据匹配到的 process（通过contains函数找到是否包含）,包含即加入要展示的数据 反之不做处理
         match = false;
         if (filterFactor == "pid")
         {
-            QString pidStr = QString::number(process.getPid());
+            QString pidStr = QString::number(process.pid());
             match = pidStr.contains(filterText, Qt::CaseInsensitive);
         }
         else if (filterFactor == "name")
-            match = process.getName().contains(filterText, Qt::CaseInsensitive);
+            match = process.name().contains(filterText, Qt::CaseInsensitive);
         else if (filterFactor == "user")
-            match = process.getUser().contains(filterText, Qt::CaseInsensitive);
+            match = process.user().contains(filterText, Qt::CaseInsensitive);
         else if (filterFactor == "state")
-            match = process.getState().contains(filterText, Qt::CaseInsensitive);
+            match = process.state().contains(filterText, Qt::CaseInsensitive);
         if (match) {
             filteredProcesses.append(process);
         }
@@ -37,7 +37,7 @@ void ProcessesDisposeWorker::filterProcesses(QList<ProcessInfo> processesWaitFil
 
 
 // 排序函数
-void ProcessesDisposeWorker::sortProcesses(QList<ProcessInfo> processesWaitSort,
+void ProcessesDisposeWorker::sortProcesses(QList<LinuxProcessInfo> processesWaitSort,
                                            int column, bool isMsgBox, Qt::SortOrder order)
 {
     // 根据列索引定义排序规则
@@ -45,54 +45,54 @@ void ProcessesDisposeWorker::sortProcesses(QList<ProcessInfo> processesWaitSort,
     case 0:  // PID 列
         isMsgBox = false;
         std::sort(processesWaitSort.begin(), processesWaitSort.end(),
-                            [order](const ProcessInfo &a, const ProcessInfo &b)
+                            [order](const LinuxProcessInfo &a, const LinuxProcessInfo &b)
         {
-            return (order == Qt::AscendingOrder) ? (a.getPid() > b.getPid()) : (a.getPid() < b.getPid());
+            return (order == Qt::AscendingOrder) ? (a.pid() > b.pid()) : (a.pid() < b.pid());
         });
         break;
     case 1:  // Name 列
         isMsgBox = false;
         std::sort(processesWaitSort.begin(), processesWaitSort.end(),
-                            [order](const ProcessInfo &a, const ProcessInfo &b)
+                            [order](const LinuxProcessInfo &a, const LinuxProcessInfo &b)
         {
             return (order == Qt::AscendingOrder) ?
-                        (a.getName() > b.getName()) : (a.getName() < b.getName());
+                        (a.name() > b.name()) : (a.name() < b.name());
         });
         break;
     case 2:  // User 列
         isMsgBox = false;
         std::sort(processesWaitSort.begin(), processesWaitSort.end(),
-                            [order](const ProcessInfo &a, const ProcessInfo &b)
+                            [order](const LinuxProcessInfo &a, const LinuxProcessInfo &b)
         {
             return (order == Qt::AscendingOrder) ?
-                        (a.getUser() > b.getUser()) : (a.getUser() < b.getUser());
+                        (a.user() > b.user()) : (a.user() < b.user());
         });
         break;
     case 3:  // State 列
         isMsgBox = false;
         std::sort(processesWaitSort.begin(), processesWaitSort.end(),
-                            [order](const ProcessInfo &a, const ProcessInfo &b)
+                            [order](const LinuxProcessInfo &a, const LinuxProcessInfo &b)
         {
             return (order == Qt::AscendingOrder) ?
-                        (a.getState() > b.getState()) : (a.getState() < b.getState());
+                        (a.state() > b.state()) : (a.state() < b.state());
         });
         break;
     case 4:  // Cpu 列
         isMsgBox = false;
         std::sort(processesWaitSort.begin(), processesWaitSort.end(),
-                            [order](const ProcessInfo &a, const ProcessInfo &b)
+                            [order](const LinuxProcessInfo &a, const LinuxProcessInfo &b)
         {
             return (order == Qt::AscendingOrder) ?
-                        (a.getCpuUsage() > b.getCpuUsage()) : (a.getCpuUsage() < b.getCpuUsage());
+                        (a.cpuUsage() > b.cpuUsage()) : (a.cpuUsage() < b.cpuUsage());
         });
         break;
     case 5:  // Mem 列
         isMsgBox = false;
         std::sort(processesWaitSort.begin(), processesWaitSort.end(),
-                            [order](const ProcessInfo &a, const ProcessInfo &b)
+                            [order](const LinuxProcessInfo &a, const LinuxProcessInfo &b)
         {
             return (order == Qt::AscendingOrder) ?
-                    (a.getMemoryUsage() > b.getMemoryUsage()) : (a.getMemoryUsage() < b.getMemoryUsage());
+                    (a.memoryUsage() > b.memoryUsage()) : (a.memoryUsage() < b.memoryUsage());
         });
         break;
         // 其他列......

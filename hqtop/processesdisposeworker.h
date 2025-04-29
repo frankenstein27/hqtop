@@ -3,7 +3,7 @@
 
 #include <QObject>
 
-#include "processinfo.h"
+#include "linuxprocessinfo.h"
 
 
 class ProcessesDisposeWorker : public QObject
@@ -13,12 +13,12 @@ public:
     explicit ProcessesDisposeWorker(QObject *parent = nullptr);
 
 public slots:
-    void sortProcesses(QList<ProcessInfo> processesWaitSort,int column,bool isMsgBox,
+    void sortProcesses(QList<LinuxProcessInfo> processesWaitSort,int column,bool isMsgBox,
                        Qt::SortOrder order = Qt::AscendingOrder);
-    void filterProcesses(QList<ProcessInfo> processesWaitFilter,QString filterFactor,QString filterText);
+    void filterProcesses(QList<LinuxProcessInfo> processesWaitFilter,QString filterFactor,QString filterText);
 signals:
-    void sortFinished(QList<ProcessInfo> sortedProcesses,bool isMsgBox,int column);
-    void filtFinished(QList<ProcessInfo> filteredProcesses);
+    void sortFinished(QList<LinuxProcessInfo> sortedProcesses,bool isMsgBox,int column);
+    void filtFinished(QList<LinuxProcessInfo> filteredProcesses);
 };
 
 #endif // WORKER_H

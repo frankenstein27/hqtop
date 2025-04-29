@@ -17,12 +17,12 @@ ProcessManager::~ProcessManager()
 }
 
 
-QList<ProcessInfo>& ProcessManager::getProcesses()
+QList<LinuxProcessInfo>& ProcessManager::getProcesses()
 {
     return this->m_processes;
 }
 
-void ProcessManager::handldProcessUpdate(const QList<ProcessInfo>& processes)
+void ProcessManager::handldProcessUpdate(const QList<LinuxProcessInfo>& processes)
 {
     this->m_processes = processes;
     // 数据更新 通知 processTableModel

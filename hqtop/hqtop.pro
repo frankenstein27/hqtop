@@ -20,6 +20,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     datacollector.cpp \
     linuxdataprovider.cpp \
+    linuxprocessinfo.cpp \
     logger.cpp \
     main.cpp \
     processesdisposeworker.cpp \
@@ -32,11 +33,14 @@ SOURCES += \
     settingwidget.cpp \
     systemdataprovider.cpp \
     systemresource.cpp \
-    widget.cpp
+    widget.cpp \
+    windowsdataprovider.cpp \
+    windowsprocessinfo.cpp
 
 HEADERS += \
     datacollector.h \
     linuxdataprovider.h \
+    linuxprocessinfo.h \
     logger.h \
     processesdisposeworker.h \
     processinfo.h \
@@ -48,7 +52,9 @@ HEADERS += \
     settingwidget.h \
     systemdataprovider.h \
     systemresource.h \
-    widget.h
+    widget.h \
+    windowsdataprovider.h \
+    windowsprocessinfo.h
 
 FORMS += \
     resourcewidget.ui \
@@ -66,3 +72,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 DISTFILES +=
+
+win32 {
+    LIBS += -lpsapi -ladvapi32
+    DEFINES += WIN32_LEAN_AND_MEAN
+}

@@ -40,14 +40,14 @@ LinuxDataProvider& LinuxDataProvider::operator=(const LinuxDataProvider &other)
 }
 
 // 获取进程列表
-QList<ProcessInfo> LinuxDataProvider::getProcessList()
+QList<LinuxProcessInfo> LinuxDataProvider::getProcessList()
 {
-    QList<ProcessInfo> processesInfo;
+    QList<LinuxProcessInfo> processesInfo;
     // 调用函数 获取当前进程目录名
     this->getAllProcess();
 
     // 遍历每个进程 获取ProcessInfo
-    ProcessInfo processinfo;
+    LinuxProcessInfo processinfo;
     QString path;
     int pid;
     QFile file;

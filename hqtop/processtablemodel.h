@@ -44,11 +44,11 @@ public slots:
 
 private slots:
     // 进程数据更新 信号由 processmanager 发来
-    void onProcessesUpdate(QList<ProcessInfo> processes);
+    void onProcessesUpdate(QList<LinuxProcessInfo> processes);
     // 排序完成
-    void onSortFinished(QList<ProcessInfo> sortedProcesses,int column);
+    void onSortFinished(QList<LinuxProcessInfo> sortedProcesses,int column);
     // 过滤完成
-    void onFilterFinished(QList<ProcessInfo> filteredProcesses);
+    void onFilterFinished(QList<LinuxProcessInfo> filteredProcesses);
 
 
 signals:
@@ -65,9 +65,9 @@ private:
 
     ProcessManager *manager;
     // 缓存原始数据（下层传递来的数据）
-    QList<ProcessInfo> m_originalProcesses;
+    QList<LinuxProcessInfo> m_originalProcesses;
     // 缓存过滤、排序之后进程数据（真正要现实的数据）
-    QList<ProcessInfo> m_processes;
+    QList<LinuxProcessInfo> m_processes;
 
     // 用于保存排序状态（当前按...字段排序、升/降序）
     int m_sortedColumn;

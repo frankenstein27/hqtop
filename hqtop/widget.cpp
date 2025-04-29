@@ -37,8 +37,17 @@ Widget::Widget(QWidget *parent)
 
     this->setFixedSize(windowWidth, windowHeight);
 
+#ifdef Q_OS_WIN
+
+    qDebug() << "this is windows paltform.";
+//    this->dataprovider = new WindowsDataProvider();
+
+
+#elif defined(Q_OS_LINUX)
 
     this->dataprovider = new LinuxDataProvider();
+
+#endif
     this->dataCollector = new DataCollector(this->dataprovider);
     this->processmanager = new ProcessManager();
     this->resourceanalyzer = new ResourceAnalyzer();

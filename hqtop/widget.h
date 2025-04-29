@@ -10,6 +10,7 @@
 #include "resourcewidget.h"
 #include "systemdataprovider.h"
 #include "linuxdataprovider.h"
+#include "windowsdataprovider.h"
 #include "processmanager.h"
 #include "resourceanalyzer.h"
 #include "processtablemodel.h"

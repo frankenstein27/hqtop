@@ -4,7 +4,7 @@
  *
  */
 
-DataCollector::DataCollector(SystemDataProvider *provider,QObject *parent) :
+DataCollector::DataCollector(SystemDataProvider *provider, QObject *parent) :
     m_provider(provider)
   , m_sysResourceReceiver(true)     // 启动时默认为进程页显示
   , mylogger(spdlog::get("global_logger"))
@@ -57,7 +57,7 @@ void DataCollector::fetchData()
     if(this->m_sysResourceReceiver)
     {
         // 获取进程信息 发送数据更新信号 在 widget.cpp 中接受两个信号
-        QList<ProcessInfo> processes = m_provider->getProcessList();
+        QList<LinuxProcessInfo> processes = m_provider->getProcessList();
         emit updateProcesses(processes);
         // 获取系统级资源 发送进程页数据更新信号
         SystemResource* sysResource = m_provider->getSystemResource();

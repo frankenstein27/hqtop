@@ -56,7 +56,7 @@ ProcessTableModel::~ProcessTableModel()
 
 
 // 保存原始数据之后即调用过滤函数
-void ProcessTableModel::onProcessesUpdate(QList<ProcessInfo> processes)
+void ProcessTableModel::onProcessesUpdate(QList<LinuxProcessInfo> processes)
 {
     // 直接更新（若数据变动较小，浪费性能）
 
@@ -74,24 +74,24 @@ void ProcessTableModel::onProcessesUpdate(QList<ProcessInfo> processes)
         int newProcessesSize = processes.size();
         int oldProcessesSize = m_originalProcesses.size();
         int minProcessesSize = qMin(newProcessesSize, oldProcessesSize);
-        ProcessInfo process;
+        LinuxProcessInfo process;
 
         QString log_str;
         for (int i = 0; i < minProcessesSize; ++i)
         {   
             process = processes[i];
-            if(process.getCpuUsage() >= 8)
+            if(process.cpuUsage() >= 8.0)
             {
-                log_str = "High Cpu Usage! Pid: " + QString::number(process.getPid()) +
-                        "   Name: "+ process.getName() +
-                        "   Cpu Usage: " + QString::number(process.getCpuUsage()) + "%";
+                log_str = "High Cpu Usage! Pid: " + QString::number(process.pid()) +
+                        "   Name: "+ process.name() +
+                        "   Cpu Usage: " + QString::number(process.cpuUsage()) + "%";
                 mylogger->warn(log_str.toStdString());
             }
-            if(process.getMemoryUsage() >= 800)
+            if(process.memoryUsage() >= 800)
             {
-                log_str = "High Memory Used! Pid: " + QString::number(process.getPid()) +
-                        "   Name: " + process.getName() +
-                        "   Memory Used: " + QString::number(process.getMemoryUsage()) + "MB";
+                log_str = "High Memory Used! Pid: " + QString::number(process.pid()) +
+                        "   Name: " + process.name() +
+                        "   Memory Used: " + QString::number(process.memoryUsage()) + "MB";
             }
 
             if (m_originalProcesses[i] != process)
@@ -159,17 +159,17 @@ void ProcessTableModel::applyFilter()
 // 异步过滤，在子线程中完成逻辑
 void ProcessTableModel::asyncFilter()
 {
-    QList<ProcessInfo> processWaitFilter = m_originalProcesses;
+    QList<LinuxProcessInfo> processWaitFilter = m_originalProcesses;
 
     QMetaObject::invokeMethod(this->m_processesDisposeWorker, "filterProcesses",
-                              Q_ARG(QList<ProcessInfo>, processWaitFilter),
+                              Q_ARG(QList<LinuxProcessInfo>, processWaitFilter),
                               Q_ARG(QString, this->m_filterFactor),
                               Q_ARG(QString, this->m_filterText));
 }
 
 
 // 过滤完成接收的槽函数
-void ProcessTableModel::onFilterFinished(QList<ProcessInfo> filteredProcesses)
+void ProcessTableModel::onFilterFinished(QList<LinuxProcessInfo> filteredProcesses)
 {
     beginResetModel();
     this->m_processes = filteredProcesses;
@@ -204,11 +204,11 @@ void ProcessTableModel::sort(int column, Qt::SortOrder order)
 void ProcessTableModel::requestAsyncSort(int column, Qt::SortOrder order)
 {
     // 复制一份数据，防止当前线程中数据被修改
-    QList<ProcessInfo> processWaitSort = m_processes;
+    QList<LinuxProcessInfo> processWaitSort = m_processes;
 
     // 启动 m_processesDisposeWorker 进行排序，参数含义：启动哪一个子线程，其中的哪个函数，参数1（类型，名）,参数2......
     QMetaObject::invokeMethod(this->m_processesDisposeWorker, "sortProcesses",
-                              Q_ARG(QList<ProcessInfo>, processWaitSort),
+                              Q_ARG(QList<LinuxProcessInfo>, processWaitSort),
                               Q_ARG(int, column),
                               Q_ARG(bool, m_isMsgBox),
                               Q_ARG(Qt::SortOrder, order));
@@ -216,7 +216,7 @@ void ProcessTableModel::requestAsyncSort(int column, Qt::SortOrder order)
 
 
 // 排序完成接收的槽函数
-void ProcessTableModel::onSortFinished(QList<ProcessInfo> sortedProcesses,int column)
+void ProcessTableModel::onSortFinished(QList<LinuxProcessInfo> sortedProcesses,int column)
 {
     // 通知视图即将更新
     beginResetModel();
@@ -245,7 +245,7 @@ void ProcessTableModel::changeColumn()
 void ProcessTableModel::onTableRowClicked(const QModelIndex &index)
 {
     qint64 checkedRow = index.row();
-    m_checkedProcess = m_processes[checkedRow].getPid();
+    m_checkedProcess = m_processes[checkedRow].pid();
 //    qDebug() << "m_checkedProcess: " << m_checkedProcess;
 }
 
@@ -276,10 +276,10 @@ QVariant ProcessTableModel::data(const QModelIndex &index, int role) const
     if(!index.isValid() || index.row() >= this->m_processes.size())
         return QVariant();
 
-    const ProcessInfo& process = this->m_processes.at(index.row());
+    const LinuxProcessInfo& process = this->m_processes.at(index.row());
     if(role == Qt::BackgroundRole)
     {
-        if(process.getCpuUsage() >= 10 || process.getMemoryUsage() >= 800)
+        if(process.cpuUsage() >= 8.0 || process.memoryUsage() >= 800)
             return QBrush(QColor(218, 69, 9));
 //        else
 //        {
@@ -296,17 +296,17 @@ QVariant ProcessTableModel::data(const QModelIndex &index, int role) const
         switch (index.column())
         {
             case 0:
-                return process.getPid();
+                return process.pid();
             case 1:
-                return process.getName();
+                return process.name();
             case 2:
-                return process.getUser();
+                return process.user();
             case 3:
-                return process.getState();
+                return process.state();
             case 4:
-                return QString::number(process.getCpuUsage()) + '%';
+                return QString::number(process.cpuUsage()) + '%';
             case 5:
-                return QString::number(process.getMemoryUsage()) + "MB";
+                return QString::number(process.memoryUsage()) + "MB";
             default:
                 return QVariant();
         }

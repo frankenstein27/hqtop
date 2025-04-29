@@ -21,7 +21,7 @@ public:
     LinuxDataProvider(const LinuxDataProvider& other);
     LinuxDataProvider& operator=(const LinuxDataProvider &other);
 
-    QList<ProcessInfo> getProcessList() override;
+    QList<LinuxProcessInfo> getProcessList() override;
     SystemResource* getSystemResource() override;
 
 public slots:
@@ -37,7 +37,7 @@ private:
 
 private:
     // 获取页面大小
-    void getKernelPageSize() override;
+    void getKernelPageSize();
     // 获取 用户ID和用户名 的映射
     void getUserIdMap();
 
@@ -48,7 +48,7 @@ private:
 
     QList<qint64> *processIDs;
     QMap<qint64,double> m_prevProcCpuTime;
-    double m_prevTotalCpu,m_prevIdleCpu,m_diffCpuTime;;
+    double m_prevTotalCpu,m_prevIdleCpu,m_diffCpuTime;
 
     // 页面大小 KB
     short m_KernelPageSize;
