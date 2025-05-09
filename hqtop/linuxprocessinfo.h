@@ -22,6 +22,14 @@ public:
       , m_state(state) {}
 
 
+    // 克隆
+    LinuxProcessInfo* clone() const override {
+            return new LinuxProcessInfo(*this);
+        }
+
+    Platform platform() const { return Platform::Linux; }
+
+
     // 拷贝构造函数
     LinuxProcessInfo(const LinuxProcessInfo&) = default;
 
@@ -62,9 +70,6 @@ public:
                 || (m_user != o.m_user) || (m_state != o.m_state));
     }
 
-    // 克隆
-    ProcessInfo *clone() const { return new LinuxProcessInfo(*this); }
-
     QString user() const                { return m_user; }
     QString state() const               { return m_state; }
 
@@ -81,6 +86,7 @@ private:
 
 Q_DECLARE_METATYPE(LinuxProcessInfo)
 Q_DECLARE_METATYPE(QList<LinuxProcessInfo>)
-
+Q_DECLARE_METATYPE(LinuxProcessInfo*)
+Q_DECLARE_METATYPE(QList<LinuxProcessInfo*>)
 
 #endif // PROCESSINFO_H

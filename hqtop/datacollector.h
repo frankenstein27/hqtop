@@ -32,7 +32,7 @@ private slots:
     void fetchData();
 
 signals:
-    void updateProcesses(const QList<LinuxProcessInfo>& processes);
+    void updateProcesses(const QList<ProcessInfo*> processes);
     void updateSysResourceToProcessesPage(const SystemResource& resource);
     void updateSysResourceToSysResourcePage(const SystemResource& resource);
 

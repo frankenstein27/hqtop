@@ -6,7 +6,7 @@ ProcessesDisposeWorker::ProcessesDisposeWorker(QObject *parent) : QObject(parent
 }
 
 // 过滤函数
-void ProcessesDisposeWorker::filterProcesses(QList<LinuxProcessInfo> processesWaitFilter,
+void ProcessesDisposeWorker::filterProcesses(QList<ProcessInfo*> processesWaitFilter,
                                                 QString filterFactor,QString filterText)
 {
     QList<LinuxProcessInfo> filteredProcesses;
@@ -37,7 +37,7 @@ void ProcessesDisposeWorker::filterProcesses(QList<LinuxProcessInfo> processesWa
 
 
 // 排序函数
-void ProcessesDisposeWorker::sortProcesses(QList<LinuxProcessInfo> processesWaitSort,
+void ProcessesDisposeWorker::sortProcesses(QList<ProcessInfo*> processesWaitSort,
                                            int column, bool isMsgBox, Qt::SortOrder order)
 {
     // 根据列索引定义排序规则

@@ -22,6 +22,14 @@ public:
       , m_isForeground(isForeground) {}
 
 
+    // 克隆
+    WindowsProcessInfo* clone() const override {
+            return new WindowsProcessInfo(*this);
+        }
+
+    Platform platform() const { return Platform::Windows; }
+
+
     // 拷贝构造函数
     WindowsProcessInfo(const WindowsProcessInfo&) = default;
     /*
@@ -61,10 +69,6 @@ public:
                 || (m_isForeground != o.m_isForeground);
     }
 
-
-    // 克隆
-    ProcessInfo *clone() const { return new WindowsProcessInfo(*this); }
-
     QString path() const { return m_path; }
     bool getState() const { return m_isForeground; }
 
@@ -78,5 +82,7 @@ private:
 
 Q_DECLARE_METATYPE(WindowsProcessInfo)
 Q_DECLARE_METATYPE(QList<WindowsProcessInfo>)
+Q_DECLARE_METATYPE(WindowsProcessInfo*)
+Q_DECLARE_METATYPE(QList<WindowsProcessInfo*>)
 
 #endif // WINDOWSPROCESSINFO_HPP

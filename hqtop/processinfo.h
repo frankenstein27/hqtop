@@ -5,6 +5,12 @@
 #include <QString>
 #include <qmetatype.h>
 
+enum Platform
+{
+    Windows = 1,
+    Linux = 2
+};
+
 class ProcessInfo : public QObject
 {
     Q_OBJECT
@@ -19,6 +25,18 @@ public:
     QString name() const        { return m_name; }
     double cpuUsage() const     { return m_cpuUsage; }
     qint64 memoryUsage() const  { return m_memoryUsage; }
+    virtual ProcessInfo* clone() const = 0;
+
+    Platform platform() const {
+#ifdef Q_OS_WIN
+
+        return Platform::Windows;
+
+#elif def Q_OS_LINUX
+
+        return Platform::Linux
+#endif
+    };
 
     // setter 方法
     void setPid(const qint64 pid)                   { m_pid = pid; }
@@ -78,5 +96,7 @@ private:
 
 Q_DECLARE_METATYPE(ProcessInfo)
 Q_DECLARE_METATYPE(QList<ProcessInfo>)
+Q_DECLARE_METATYPE(ProcessInfo*)
+Q_DECLARE_METATYPE(QList<ProcessInfo*>)
 
 #endif // PROCESSESINFO_HPP

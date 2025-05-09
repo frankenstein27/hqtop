@@ -17,8 +17,8 @@ WindowsDataProvider::~WindowsDataProvider()
 }
 
 
-/*
-QList<WindowsProcessInfo> WindowsDataProvider::getProcessList()
+
+QList<ProcessInfo> WindowsDataProvider::getProcessList()
 {
     QList<WindowsProcessInfo> processes;
 
@@ -61,7 +61,7 @@ QList<WindowsProcessInfo> WindowsDataProvider::getProcessList()
         CloseHandle(hSnapshot);
         return processes;
 }
-*/
+
 
 
 SystemResource* WindowsDataProvider::getSystemResource()

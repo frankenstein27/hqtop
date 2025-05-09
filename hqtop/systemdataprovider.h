@@ -15,7 +15,7 @@ public:
     explicit SystemDataProvider(QObject *parent = nullptr);
 
     // 获取进程列表（从/proc目录读取）
-    virtual QList<LinuxProcessInfo> getProcessList() = 0;
+    virtual QList<ProcessInfo*> getProcessList() = 0;
     // 获取系统总体资源
     virtual SystemResource* getSystemResource() = 0;
 

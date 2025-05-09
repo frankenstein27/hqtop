@@ -15,7 +15,7 @@ public:
     // 深拷贝 && 赋值运算符重载
 
     // 获取进程列表
-//    QList<WindowsProcessInfo> getProcessList() override;
+    QList<ProcessInfo*> getProcessList() override;
     // 获取系统总体资源（cpu、内存、GPU等等）
     SystemResource* getSystemResource() override;
 

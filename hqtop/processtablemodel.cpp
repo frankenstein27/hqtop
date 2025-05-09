@@ -11,7 +11,7 @@
 ProcessTableModel::ProcessTableModel(Setting *setting,ProcessManager
                                             *processmanager, QObject *parent)
     : QAbstractTableModel(parent)
-    , manager(processmanager)
+    , m_manager(processmanager)
     , m_sortedColumn(-1)
     , m_sortOrder(Qt::AscendingOrder)
     , m_isMsgBox(false)
@@ -22,8 +22,10 @@ ProcessTableModel::ProcessTableModel(Setting *setting,ProcessManager
     , m_setting(setting)
 {
     // 关联：进程信息更新信号（来自ProcessManager），由 onProcessesUpdate 处理
-    connect(this->manager, &ProcessManager::processesUpdated,this,
+
+    connect(this->m_manager, &ProcessManager::processesUpdated,this,
             &ProcessTableModel::onProcessesUpdate, Qt::QueuedConnection);
+
 
     // 初始化列名
     changeColumn();
@@ -48,50 +50,53 @@ ProcessTableModel::ProcessTableModel(Setting *setting,ProcessManager
 
 ProcessTableModel::~ProcessTableModel()
 {
-    delete manager;
+    delete m_manager;
     m_sortThread->quit();
     m_sortThread->wait();
     delete m_processesDisposeWorker;
 }
 
 
-// 保存原始数据之后即调用过滤函数
-void ProcessTableModel::onProcessesUpdate(QList<LinuxProcessInfo> processes)
-{
-    // 直接更新（若数据变动较小，浪费性能）
 
+// 保存原始数据之后即调用过滤函数
+void ProcessTableModel::onProcessesUpdate()
+{
+    // 直接更新（若数据变动较小，则有很多无意义的读写，浪费性能）
 //    this->m_originalProcesses = processes;
 //    this->applyFilter();
 
-    if(!m_originalProcesses.size())
+    // 原始进程信息长度为0（第一次收集到进程数据），直接拷贝即可
+    if(!this->m_manager->m_processes.size())
     {
-        m_originalProcesses = processes;
+        m_originalProcesses = m_manager->deepCopyList(m_manager->m_processes);
         this->applyFilter();
     }
     else
     {
         // 在此处找出变化的项 进行增量更新：将与原来不相等的进程替换
-        int newProcessesSize = processes.size();
+        int newProcessesSize = m_manager->m_processes.size();
         int oldProcessesSize = m_originalProcesses.size();
         int minProcessesSize = qMin(newProcessesSize, oldProcessesSize);
-        LinuxProcessInfo process;
+
+        ProcessInfo *process;
 
         QString log_str;
         for (int i = 0; i < minProcessesSize; ++i)
-        {   
-            process = processes[i];
-            if(process.cpuUsage() >= 8.0)
+        {
+            process = m_manager->m_processes[i];
+
+            if(process->cpuUsage() >= 8.0)
             {
-                log_str = "High Cpu Usage! Pid: " + QString::number(process.pid()) +
-                        "   Name: "+ process.name() +
-                        "   Cpu Usage: " + QString::number(process.cpuUsage()) + "%";
+                log_str = "High Cpu Usage! Pid: " + QString::number(process->pid()) +
+                        "   Name: "+ process->name() +
+                        "   Cpu Usage: " + QString::number(process->cpuUsage()) + "%";
                 mylogger->warn(log_str.toStdString());
             }
-            if(process.memoryUsage() >= 800)
+            if(process->memoryUsage() >= 800)
             {
-                log_str = "High Memory Used! Pid: " + QString::number(process.pid()) +
-                        "   Name: " + process.name() +
-                        "   Memory Used: " + QString::number(process.memoryUsage()) + "MB";
+                log_str = "High Memory Used! Pid: " + QString::number(process->pid()) +
+                        "   Name: " + process->name() +
+                        "   Memory Used: " + QString::number(process->memoryUsage()) + "MB";
             }
 
             if (m_originalProcesses[i] != process)
@@ -99,7 +104,6 @@ void ProcessTableModel::onProcessesUpdate(QList<LinuxProcessInfo> processes)
                 m_originalProcesses[i] = process;
                 QModelIndex topLeft = createIndex(i, 0);                            // 第 i 行的第一格
                 QModelIndex bottomRight = createIndex(i, columnCount() - 1);        // 第 i 行的第 columnCount 格
-//                qDebug() << "局部刷新了" << processes[i].getPid() << processes[i].getName();
                 emit dataChanged(topLeft, bottomRight);                             // 局部刷新
             }
         }
@@ -111,7 +115,7 @@ void ProcessTableModel::onProcessesUpdate(QList<LinuxProcessInfo> processes)
             beginInsertRows(QModelIndex(), newProcessesStartIndex, newProcessesEndIndex);
             for (int i = newProcessesStartIndex; i <= newProcessesEndIndex; ++i)
             {
-                m_originalProcesses.append(processes[i]);
+                m_originalProcesses.append(m_manager->m_processes[i]);
             }
             endInsertRows();
         }
@@ -135,7 +139,6 @@ void ProcessTableModel::onProcessesUpdate(QList<LinuxProcessInfo> processes)
 }
 
 
-
 // 过滤：如果没有过滤内容直接赋值过滤后的数据为完整数据，反之如果match到了，append到过滤后的数据
 void ProcessTableModel::applyFilter()
 {
@@ -143,7 +146,7 @@ void ProcessTableModel::applyFilter()
     if(this->m_filterText.isEmpty())
     {   // 如果未输入任何过滤内容 要展示的数据即为所有数据 无需进入子线程
         beginResetModel();
-        this->m_processes = m_originalProcesses;
+        this->m_processes = m_manager->deepCopyList(m_originalProcesses);
         endResetModel();
         // 只要有过排序请求的点击 即进行排序处理
         if(-1 != m_sortedColumn)
@@ -159,20 +162,20 @@ void ProcessTableModel::applyFilter()
 // 异步过滤，在子线程中完成逻辑
 void ProcessTableModel::asyncFilter()
 {
-    QList<LinuxProcessInfo> processWaitFilter = m_originalProcesses;
+    QList<ProcessInfo*> processWaitFilter = m_originalProcesses;
 
     QMetaObject::invokeMethod(this->m_processesDisposeWorker, "filterProcesses",
-                              Q_ARG(QList<LinuxProcessInfo>, processWaitFilter),
+                              Q_ARG(QList<ProcessInfo*>, processWaitFilter),
                               Q_ARG(QString, this->m_filterFactor),
                               Q_ARG(QString, this->m_filterText));
 }
 
 
 // 过滤完成接收的槽函数
-void ProcessTableModel::onFilterFinished(QList<LinuxProcessInfo> filteredProcesses)
+void ProcessTableModel::onFilterFinished(QList<ProcessInfo*> filteredProcesses)
 {
     beginResetModel();
-    this->m_processes = filteredProcesses;
+    this->m_processes = m_manager->deepCopyList(filteredProcesses);
     endResetModel();
 
     if(-1 != m_sortedColumn)
@@ -197,6 +200,7 @@ void ProcessTableModel::sort(int column, Qt::SortOrder order)
 
     // 调用异步排序
     this->requestAsyncSort(column, order);
+//    m_manager->requestAsyncSort(column, order);
 }
 
 
@@ -204,11 +208,11 @@ void ProcessTableModel::sort(int column, Qt::SortOrder order)
 void ProcessTableModel::requestAsyncSort(int column, Qt::SortOrder order)
 {
     // 复制一份数据，防止当前线程中数据被修改
-    QList<LinuxProcessInfo> processWaitSort = m_processes;
+    QList<ProcessInfo*> processWaitSort = m_manager->deepCopyList(m_processes);
 
     // 启动 m_processesDisposeWorker 进行排序，参数含义：启动哪一个子线程，其中的哪个函数，参数1（类型，名）,参数2......
     QMetaObject::invokeMethod(this->m_processesDisposeWorker, "sortProcesses",
-                              Q_ARG(QList<LinuxProcessInfo>, processWaitSort),
+                              Q_ARG(QList<ProcessInfo*>, processWaitSort),
                               Q_ARG(int, column),
                               Q_ARG(bool, m_isMsgBox),
                               Q_ARG(Qt::SortOrder, order));
@@ -216,13 +220,13 @@ void ProcessTableModel::requestAsyncSort(int column, Qt::SortOrder order)
 
 
 // 排序完成接收的槽函数
-void ProcessTableModel::onSortFinished(QList<LinuxProcessInfo> sortedProcesses,int column)
+void ProcessTableModel::onSortFinished(QList<ProcessInfo*> sortedProcesses,int column)
 {
     // 通知视图即将更新
     beginResetModel();
 
     // 更新视图模型
-    m_processes = sortedProcesses;
+    m_processes = m_manager->deepCopyList(sortedProcesses);
     if(m_isMsgBox)
     {
         qDebug() << "无法排序" << column;
@@ -238,14 +242,18 @@ void ProcessTableModel::onSortFinished(QList<LinuxProcessInfo> sortedProcesses,i
 void ProcessTableModel::changeColumn()
 {
     // 用 append 也可以
+#ifdef Q_OS_WIN
+    m_columnName << "Pid" << "Name" << "Path" << "State" << "CPU%" << "Memory";
+#elif Q_OS_LINUX
     m_columnName << "Pid" << "Name" << "User" << "State" << "CPU%" << "Memory";
+#endif
 }
 
 
 void ProcessTableModel::onTableRowClicked(const QModelIndex &index)
 {
     qint64 checkedRow = index.row();
-    m_checkedProcess = m_processes[checkedRow].pid();
+    m_checkedProcess = m_processes[checkedRow]->pid();
 //    qDebug() << "m_checkedProcess: " << m_checkedProcess;
 }
 
@@ -258,7 +266,7 @@ void ProcessTableModel::onDeletePushButtonClicked()
                                                                   QMessageBox::Ok | QMessageBox::Cancel);
         if(result == QMessageBox::Ok)
         {
-            this->manager->killProcess(m_checkedProcess);
+            this->m_manager->killProcess(m_checkedProcess);
         }
         else if(result == QMessageBox::Cancel)
             return;
@@ -276,18 +284,19 @@ QVariant ProcessTableModel::data(const QModelIndex &index, int role) const
     if(!index.isValid() || index.row() >= this->m_processes.size())
         return QVariant();
 
-    const LinuxProcessInfo& process = this->m_processes.at(index.row());
+    ProcessInfo* process = this->m_processes.at(index.row());
     if(role == Qt::BackgroundRole)
     {
-        if(process.cpuUsage() >= 8.0 || process.memoryUsage() >= 800)
+        if(process->cpuUsage() >= 8.0 || process->memoryUsage() >= 800)
             return QBrush(QColor(218, 69, 9));
-//        else
-//        {
-//            if(index.row() % 2)
-//                return QBrush(QColor(192, 192, 192));
-//            else
-//                return QBrush(QColor(3, 131, 135));
-//        }
+/*        else
+       {
+            if(index.row() % 2)
+                return QBrush(QColor(192, 192, 192));
+            else
+                return QBrush(QColor(3, 131, 135));
+        }
+*/
     }
 
 
@@ -296,17 +305,46 @@ QVariant ProcessTableModel::data(const QModelIndex &index, int role) const
         switch (index.column())
         {
             case 0:
-                return process.pid();
+                return process->pid();
             case 1:
-                return process.name();
+                return process->name();
             case 2:
-                return process.user();
+                if(process->platform() == Platform::Windows)
+                {
+                    WindowsProcessInfo* winProc = dynamic_cast<WindowsProcessInfo*>(process);
+                    QString path = winProc->path();
+                    delete winProc;
+                    return path;
+                }
+                else
+                {
+                    LinuxProcessInfo* linuxProc = dynamic_cast<LinuxProcessInfo*>(process);
+                    QString user = linuxProc->user();
+                    delete linuxProc;
+                    return user;
+                }
             case 3:
-                return process.state();
+                if(process->platform() == Platform::Windows)
+                {
+                    WindowsProcessInfo* winProc = dynamic_cast<WindowsProcessInfo*>(process);
+                    bool isF = winProc->getState();
+                    delete winProc;
+                    if(isF)
+                        return "后台进程";
+                    else
+                        return "前台进程";
+                }
+                else
+                {
+                    LinuxProcessInfo* linuxProc = dynamic_cast<LinuxProcessInfo*>(process);
+                    QString state = linuxProc->state();
+                    delete linuxProc;
+                    return state;
+                }
             case 4:
-                return QString::number(process.cpuUsage()) + '%';
+                return QString::number(process->cpuUsage()) + '%';
             case 5:
-                return QString::number(process.memoryUsage()) + "MB";
+                return QString::number(process->memoryUsage()) + "MB";
             default:
                 return QVariant();
         }

@@ -15,8 +15,27 @@ class ProcessTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
+    ProcessTableModel(QObject *parent) {}
     ProcessTableModel(Setting *setting,ProcessManager *processmanager,QObject *parent);
     ~ProcessTableModel();
+
+    /*
+    struct ProcessEntry
+    {
+        qint64 pid;
+        QString name;
+        double cpuUsage;
+        qint64 memory;
+        // 平台特有字段
+        // Windows 特有
+        QString path;
+        bool isForeground;
+        // Linux 特有
+        QString user;
+        QString state;
+    };
+    */
+
 
     // 行数
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -44,11 +63,11 @@ public slots:
 
 private slots:
     // 进程数据更新 信号由 processmanager 发来
-    void onProcessesUpdate(QList<LinuxProcessInfo> processes);
+    void onProcessesUpdate();
     // 排序完成
-    void onSortFinished(QList<LinuxProcessInfo> sortedProcesses,int column);
+    void onSortFinished(QList<ProcessInfo*> sortedProcesses,int column);
     // 过滤完成
-    void onFilterFinished(QList<LinuxProcessInfo> filteredProcesses);
+    void onFilterFinished(QList<ProcessInfo*> filteredProcesses);
 
 
 signals:
@@ -63,11 +82,25 @@ private:
     // 异步过滤函数 在 applyFilter 函数中调用
     void asyncFilter();
 
-    ProcessManager *manager;
-    // 缓存原始数据（下层传递来的数据）
-    QList<LinuxProcessInfo> m_originalProcesses;
+    ProcessManager *m_manager;
+    QList<ProcessInfo*> m_originalProcesses;
     // 缓存过滤、排序之后进程数据（真正要现实的数据）
-    QList<LinuxProcessInfo> m_processes;
+    QList<ProcessInfo*> m_processes;
+
+/*
+#ifdef  Q_OS_WIN
+    // 缓存原始数据（下层传递来的数据）
+    QList<WindowsProcessInfo*> m_originalProcesses;
+    // 缓存过滤、排序之后进程数据（真正要现实的数据）
+    QList<WindowsProcessInfo*> m_processes;
+
+#elif def Q_OS_LINUX
+    // 缓存原始数据（下层传递来的数据）
+    QList<LinuxProcessInfo*> m_originalProcesses;
+    // 缓存过滤、排序之后进程数据（真正要现实的数据）
+    QList<LinuxProcessInfo*> m_processes;
+#endif
+*/
 
     // 用于保存排序状态（当前按...字段排序、升/降序）
     int m_sortedColumn;

@@ -21,7 +21,7 @@ public:
     LinuxDataProvider(const LinuxDataProvider& other);
     LinuxDataProvider& operator=(const LinuxDataProvider &other);
 
-    QList<LinuxProcessInfo> getProcessList() override;
+    QList<ProcessInfo*> getProcessList() override;
     SystemResource* getSystemResource() override;
 
 public slots:

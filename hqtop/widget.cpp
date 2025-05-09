@@ -39,9 +39,7 @@ Widget::Widget(QWidget *parent)
 
 #ifdef Q_OS_WIN
 
-    qDebug() << "this is windows paltform.";
-//    this->dataprovider = new WindowsDataProvider();
-
+    this->dataprovider = new WindowsDataProvider();
 
 #elif defined(Q_OS_LINUX)
 
@@ -51,7 +49,7 @@ Widget::Widget(QWidget *parent)
     this->dataCollector = new DataCollector(this->dataprovider);
     this->processmanager = new ProcessManager();
     this->resourceanalyzer = new ResourceAnalyzer();
-    this->myTableModel = new ProcessTableModel(setting, this->processmanager, ui->processesTableView);
+    this->myTableModel = new ProcessTableModel(this->setting, this->processmanager, ui->processesTableView);
     this->resourceWidget = new ResourceWidget(this->resourceanalyzer);
     this->settingWidget = new SettingWidget(setting);
 
