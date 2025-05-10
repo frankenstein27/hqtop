@@ -1,7 +1,11 @@
 #ifndef WINDOWSPROCESSINFO_HPP
 #define WINDOWSPROCESSINFO_HPP
 
+#ifdef Q_OS_WIN
+
 #include <windows.h>
+
+#endif
 
 #include "processinfo.h"
 
