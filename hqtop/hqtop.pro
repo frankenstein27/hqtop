@@ -24,8 +24,8 @@ SOURCES += \
     logger.cpp \
     main.cpp \
     processesdisposeworker.cpp \
+    processesmanager.cpp \
     processinfo.cpp \
-    processmanager.cpp \
     processtablemodel.cpp \
     resourceanalyzer.cpp \
     resourcewidget.cpp \
@@ -43,8 +43,8 @@ HEADERS += \
     linuxprocessinfo.h \
     logger.h \
     processesdisposeworker.h \
+    processesmanager.h \
     processinfo.h \
-    processmanager.h \
     processtablemodel.h \
     resourceanalyzer.h \
     resourcewidget.h \

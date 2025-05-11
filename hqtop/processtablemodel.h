@@ -5,37 +5,19 @@
 #include <QVariant>
 #include <QModelIndex>
 
-#include "processmanager.h"
+#include "processesmanager.h"
 #include "processesdisposeworker.h"
 #include "logger.h"
 
+class ProcessesManager;
 
 class ProcessTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 
 public:
-    ProcessTableModel(QObject *parent) {}
-    ProcessTableModel(Setting *setting,ProcessManager *processmanager,QObject *parent);
+    ProcessTableModel(Setting *setting,ProcessesManager *processmanager,QObject *parent);
     ~ProcessTableModel();
-
-    /*
-    struct ProcessEntry
-    {
-        qint64 pid;
-        QString name;
-        double cpuUsage;
-        qint64 memory;
-        // 平台特有字段
-        // Windows 特有
-        QString path;
-        bool isForeground;
-        // Linux 特有
-        QString user;
-        QString state;
-    };
-    */
-
 
     // 行数
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -82,7 +64,7 @@ private:
     // 异步过滤函数 在 applyFilter 函数中调用
     void asyncFilter();
 
-    ProcessManager *m_manager;
+    ProcessesManager *m_manager;
     QList<ProcessInfo*> m_originalProcesses;
     // 缓存过滤、排序之后进程数据（真正要现实的数据）
     QList<ProcessInfo*> m_processes;

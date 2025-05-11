@@ -9,6 +9,7 @@
 
 class WindowsDataProvider : public SystemDataProvider
 {
+    Q_OBJECT
 public:
     WindowsDataProvider();
     ~WindowsDataProvider();

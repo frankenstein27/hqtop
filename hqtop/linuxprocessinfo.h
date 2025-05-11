@@ -84,8 +84,6 @@ private:
 };
 
 
-Q_DECLARE_METATYPE(LinuxProcessInfo)
-Q_DECLARE_METATYPE(QList<LinuxProcessInfo>)
 Q_DECLARE_METATYPE(LinuxProcessInfo*)
 Q_DECLARE_METATYPE(QList<LinuxProcessInfo*>)
 

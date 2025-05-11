@@ -84,8 +84,7 @@ private:
     bool m_isForeground;
 };
 
-Q_DECLARE_METATYPE(WindowsProcessInfo)
-Q_DECLARE_METATYPE(QList<WindowsProcessInfo>)
+
 Q_DECLARE_METATYPE(WindowsProcessInfo*)
 Q_DECLARE_METATYPE(QList<WindowsProcessInfo*>)
 

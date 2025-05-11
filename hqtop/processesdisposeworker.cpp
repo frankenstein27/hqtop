@@ -9,24 +9,45 @@ ProcessesDisposeWorker::ProcessesDisposeWorker(QObject *parent) : QObject(parent
 void ProcessesDisposeWorker::filterProcesses(QList<ProcessInfo*> processesWaitFilter,
                                                 QString filterFactor,QString filterText)
 {
-    QList<LinuxProcessInfo> filteredProcesses;
+    QList<ProcessInfo*> filteredProcesses;
     bool match;
 
-    for(const LinuxProcessInfo& process : processesWaitFilter)
+    for(ProcessInfo *process : processesWaitFilter)
     {
         // 根据匹配到的 process（通过contains函数找到是否包含）,包含即加入要展示的数据 反之不做处理
         match = false;
         if (filterFactor == "pid")
         {
-            QString pidStr = QString::number(process.pid());
+            QString pidStr = QString::number(process->pid());
             match = pidStr.contains(filterText, Qt::CaseInsensitive);
         }
         else if (filterFactor == "name")
-            match = process.name().contains(filterText, Qt::CaseInsensitive);
+            match = process->name().contains(filterText, Qt::CaseInsensitive);
         else if (filterFactor == "user")
-            match = process.user().contains(filterText, Qt::CaseInsensitive);
+#ifdef Q_OS_WIN
+        {
+            WindowsProcessInfo *winProc = dynamic_cast<WindowsProcessInfo*>(process);
+            match = winProc->path().contains(filterText, Qt::CaseInsensitive);
+        }
         else if (filterFactor == "state")
-            match = process.state().contains(filterText, Qt::CaseInsensitive);
+        {
+            WindowsProcessInfo *winProc = dynamic_cast<WindowsProcessInfo*>(process);
+            if(filterText == "yes" && winProc->getState())
+                match = true;
+            else if(filterText == "no" && !winProc->getState())
+                match = true;
+        }
+#elif defined (Q_OS_LINUX)
+        {
+            LinuxProcessInfo *linuxProc = dynamic_cast<LinuxProcessInfo*>(process);
+            match = linuxProc->user().contains(filterText, Qt::CaseInsensitive);
+        }
+        else if (filterFactor == "state")
+        {
+            LinuxProcessInfo *linuxProc = dynamic_cast<LinuxProcessInfo*>(process);
+            match = linuxProc->state().contains(filterText, Qt::CaseInsensitive);
+        }
+#endif
         if (match) {
             filteredProcesses.append(process);
         }
@@ -45,54 +66,83 @@ void ProcessesDisposeWorker::sortProcesses(QList<ProcessInfo*> processesWaitSort
     case 0:  // PID 列
         isMsgBox = false;
         std::sort(processesWaitSort.begin(), processesWaitSort.end(),
-                            [order](const LinuxProcessInfo &a, const LinuxProcessInfo &b)
+                            [order](const ProcessInfo *a, const ProcessInfo *b)
         {
-            return (order == Qt::AscendingOrder) ? (a.pid() > b.pid()) : (a.pid() < b.pid());
+            return (order == Qt::AscendingOrder) ? (a->pid() > b->pid()) : (a->pid() < b->pid());
         });
         break;
     case 1:  // Name 列
         isMsgBox = false;
         std::sort(processesWaitSort.begin(), processesWaitSort.end(),
-                            [order](const LinuxProcessInfo &a, const LinuxProcessInfo &b)
+                            [order](const ProcessInfo *a, const ProcessInfo *b)
         {
             return (order == Qt::AscendingOrder) ?
-                        (a.name() > b.name()) : (a.name() < b.name());
+                        (a->name() > b->name()) : (a->name() < b->name());
         });
         break;
+#ifdef Q_OS_WIN
     case 2:  // User 列
         isMsgBox = false;
         std::sort(processesWaitSort.begin(), processesWaitSort.end(),
-                            [order](const LinuxProcessInfo &a, const LinuxProcessInfo &b)
+                            [order](ProcessInfo *a, ProcessInfo *b)
         {
+            WindowsProcessInfo* winA = dynamic_cast<WindowsProcessInfo*>(a);
+            WindowsProcessInfo* winB = dynamic_cast<WindowsProcessInfo*>(b);
             return (order == Qt::AscendingOrder) ?
-                        (a.user() > b.user()) : (a.user() < b.user());
+                        (winA->path() > winB->path()) : (winB->path() < winB->path());
         });
         break;
     case 3:  // State 列
         isMsgBox = false;
         std::sort(processesWaitSort.begin(), processesWaitSort.end(),
-                            [order](const LinuxProcessInfo &a, const LinuxProcessInfo &b)
+                            [order](ProcessInfo *a, ProcessInfo *b)
         {
+            WindowsProcessInfo* winA = dynamic_cast<WindowsProcessInfo*>(a);
+            WindowsProcessInfo* winB = dynamic_cast<WindowsProcessInfo*>(b);
             return (order == Qt::AscendingOrder) ?
-                        (a.state() > b.state()) : (a.state() < b.state());
+                        (winA->getState() > winB->getState()) : (winA->getState() < winB->getState());
         });
         break;
+#elif defined (Q_OS_LINUX)
+    case 2:  // User 列
+        isMsgBox = false;
+        std::sort(processesWaitSort.begin(), processesWaitSort.end(),
+                            [order](ProcessInfo *a, ProcessInfo *b)
+        {
+            LinuxProcessInfo* linA = dynamic_cast<LinuxProcessInfo*>(a);
+            LinuxProcessInfo* linB = dynamic_cast<LinuxProcessInfo*>(b);
+            return (order == Qt::AscendingOrder) ?
+                        (linA->user() > linB->user()) : (linA->user() < linB->user());
+        });
+        break;
+    case 3:  // State 列
+        isMsgBox = false;
+        std::sort(processesWaitSort.begin(), processesWaitSort.end(),
+                            [order](ProcessInfo *a, ProcessInfo *b)
+        {
+            LinuxProcessInfo* linA = dynamic_cast<LinuxProcessInfo*>(a);
+            LinuxProcessInfo* linB = dynamic_cast<LinuxProcessInfo*>(b);
+            return (order == Qt::AscendingOrder) ?
+                        (linA->state() > linB->state()) : (linA->state() < linB->state());
+        });
+        break;
+#endif
     case 4:  // Cpu 列
         isMsgBox = false;
         std::sort(processesWaitSort.begin(), processesWaitSort.end(),
-                            [order](const LinuxProcessInfo &a, const LinuxProcessInfo &b)
+                            [order](const ProcessInfo *a, const ProcessInfo *b)
         {
             return (order == Qt::AscendingOrder) ?
-                        (a.cpuUsage() > b.cpuUsage()) : (a.cpuUsage() < b.cpuUsage());
+                        (a->cpuUsage() > b->cpuUsage()) : (a->cpuUsage() < b->cpuUsage());
         });
         break;
     case 5:  // Mem 列
         isMsgBox = false;
         std::sort(processesWaitSort.begin(), processesWaitSort.end(),
-                            [order](const LinuxProcessInfo &a, const LinuxProcessInfo &b)
+                            [order](const ProcessInfo *a, const ProcessInfo *b)
         {
             return (order == Qt::AscendingOrder) ?
-                    (a.memoryUsage() > b.memoryUsage()) : (a.memoryUsage() < b.memoryUsage());
+                    (a->memoryUsage() > b->memoryUsage()) : (a->memoryUsage() < b->memoryUsage());
         });
         break;
         // 其他列......

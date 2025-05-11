@@ -8,7 +8,7 @@
 /* 由于本类涉及到对 UI 的操作 因此无法在子进程中运行，但是可以把耗时操作（如过滤、排序）操作在子线程完成再传回来
  *
  */
-ProcessTableModel::ProcessTableModel(Setting *setting,ProcessManager
+ProcessTableModel::ProcessTableModel(Setting *setting,ProcessesManager
                                             *processmanager, QObject *parent)
     : QAbstractTableModel(parent)
     , m_manager(processmanager)
@@ -23,7 +23,7 @@ ProcessTableModel::ProcessTableModel(Setting *setting,ProcessManager
 {
     // 关联：进程信息更新信号（来自ProcessManager），由 onProcessesUpdate 处理
 
-    connect(this->m_manager, &ProcessManager::processesUpdated,this,
+    connect(this->m_manager, &ProcessesManager::processesUpdated,this,
             &ProcessTableModel::onProcessesUpdate, Qt::QueuedConnection);
 
 

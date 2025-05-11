@@ -15,6 +15,7 @@
 // 实现 Linux 平台 获取相关数据
 class LinuxDataProvider : public SystemDataProvider
 {
+    Q_OBJECT
 public:
     LinuxDataProvider();
     ~LinuxDataProvider();
@@ -24,11 +25,11 @@ public:
     QList<ProcessInfo*> getProcessList() override;
     SystemResource* getSystemResource() override;
 
-public slots:
-    bool killProcess(qint64 pid) override;
-
     qint64 getCpuNum();
     qint64 cpuNum = 0;
+
+public slots:
+    bool killProcess(qint64 pid) override;
 
 private:
     void getAllProcess();

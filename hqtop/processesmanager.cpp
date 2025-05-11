@@ -1,24 +1,24 @@
-#include "processmanager.h"
+#include "processesmanager.h"
 
 /*  本类的构造函数开启了线程 P2 ，因此本类所有函数均运行在线程 P2 中
  *
  */
 
 
-ProcessManager::ProcessManager()
+ProcessesManager::ProcessesManager()
 {
     this->moveToThread(&this->m_workerThread);
     m_workerThread.start();
 }
 
 
-ProcessManager::~ProcessManager()
+ProcessesManager::~ProcessesManager()
 {
     this->m_workerThread.quit();
     this->m_workerThread.wait();
 }
 
-QList<ProcessInfo*> ProcessManager::deepCopyList(const QList<ProcessInfo*>& original) {
+QList<ProcessInfo*> ProcessesManager::deepCopyList(const QList<ProcessInfo*>& original) {
     QList<ProcessInfo*> newList;
     for (ProcessInfo* obj : original)
     {
@@ -74,7 +74,7 @@ void ProcessManager::handldProcessUpdate(const QList<ProcessInfo*> processes)
 }
 */
 
-void ProcessManager::handldProcessUpdate(const QList<ProcessInfo*> processes)
+void ProcessesManager::handldProcessUpdate(const QList<ProcessInfo*> processes)
 {
     this->m_processes = deepCopyList(processes);
 
@@ -82,4 +82,9 @@ void ProcessManager::handldProcessUpdate(const QList<ProcessInfo*> processes)
 
     // 发出进程更新信号
     emit processesUpdated();
+}
+
+void ProcessesManager::killProcess(qint64 pid)
+{
+    emit killProcessSignal(pid);
 }

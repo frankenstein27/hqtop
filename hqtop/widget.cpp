@@ -47,7 +47,7 @@ Widget::Widget(QWidget *parent)
 
 #endif
     this->dataCollector = new DataCollector(this->dataprovider);
-    this->processmanager = new ProcessManager();
+    this->processmanager = new ProcessesManager();
     this->resourceanalyzer = new ResourceAnalyzer();
     this->myTableModel = new ProcessTableModel(this->setting, this->processmanager, ui->processesTableView);
     this->resourceWidget = new ResourceWidget(this->resourceanalyzer);
@@ -61,7 +61,7 @@ Widget::Widget(QWidget *parent)
      * 由于 dataCollector 整个对象都被移至子线程中，所以此信号也由子线程发出
      */
     connect(this->dataCollector, &DataCollector::updateProcesses, this->processmanager,
-                    &ProcessManager::handldProcessUpdate);
+                    &ProcessesManager::handldProcessUpdate);
 
     /* 2.收集进程和系统资源
      * 若切换到进程页面（默认为此页面），收集进程和系统资源信息
@@ -113,8 +113,16 @@ Widget::Widget(QWidget *parent)
 
     /* 6.3.processmanager 的杀死进程信号发出 由 LinuxDataProvider的killProcess 接收
      */
-    connect(this->processmanager, &ProcessManager::killProcessSignal,
+//#ifdef Q_OS_WIN
+//    connect(this->processmanager, &ProcessesManager::killProcessSignal,
+//                    this->dataprovider, &WindowsDataProvider::killProcess);
+//#elif defined (Q_OS_LINUX)
+//    connect(this->processmanager, &ProcessesManager::killProcessSignal,
+//                    this->dataprovider, &LinuxDataProvider::killProcess);
+//#endif
+    connect(this->processmanager, &ProcessesManager::killProcessSignal,
                     this->dataprovider, &SystemDataProvider::killProcess);
+
 
     /* 7.进程页和资源页相互切换，同时控制相关底层函数调用，节约性能
      * 7.1.在进程页点击资源页按钮 发出 processesPageHide 信号（取消调用进程更新函数，但不取消调用系统更新函数）

@@ -11,13 +11,13 @@
 #include "processtablemodel.h"
 
 // 实现进程数据管理：排序、过滤逻辑等
-class ProcessManager : public QObject
+class ProcessesManager : public QObject
 {
     Q_OBJECT
 
 public:
-    ProcessManager();
-    ~ProcessManager();
+    ProcessesManager();
+    ~ProcessesManager();
 
     friend class ProcessTableModel;
 

@@ -94,8 +94,6 @@ private:
     qint64 m_memoryUsage;
 };
 
-Q_DECLARE_METATYPE(ProcessInfo)
-Q_DECLARE_METATYPE(QList<ProcessInfo>)
 Q_DECLARE_METATYPE(ProcessInfo*)
 Q_DECLARE_METATYPE(QList<ProcessInfo*>)
 
