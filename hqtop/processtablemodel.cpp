@@ -244,7 +244,7 @@ void ProcessTableModel::changeColumn()
     // 用 append 也可以
 #ifdef Q_OS_WIN
     m_columnName << "Pid" << "Name" << "Path" << "State" << "CPU%" << "Memory";
-#elif Q_OS_LINUX
+#elif defined(Q_OS_LINUX)
     m_columnName << "Pid" << "Name" << "User" << "State" << "CPU%" << "Memory";
 #endif
 }

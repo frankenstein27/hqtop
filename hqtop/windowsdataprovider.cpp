@@ -6,22 +6,6 @@
 #include <tlhelp32.h>
 #include <psapi.h>
 
-#endif
-
-
-WindowsDataProvider::WindowsDataProvider()
-{
-
-}
-
-
-WindowsDataProvider::~WindowsDataProvider()
-{
-
-}
-
-
-
 QList<ProcessInfo*> WindowsDataProvider::getProcessList()
 {
     QList<ProcessInfo*> processes;
@@ -75,6 +59,18 @@ SystemResource* WindowsDataProvider::getSystemResource()
 
 
 bool WindowsDataProvider::killProcess(qint64 pid)
+{
+
+}
+#endif
+
+WindowsDataProvider::WindowsDataProvider()
+{
+
+}
+
+
+WindowsDataProvider::~WindowsDataProvider()
 {
 
 }

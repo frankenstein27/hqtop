@@ -13,8 +13,8 @@ class WindowsDataProvider : public SystemDataProvider
 public:
     WindowsDataProvider();
     ~WindowsDataProvider();
-    // 深拷贝 && 赋值运算符重载
 
+#ifdef Q_OS_WIN
     // 获取进程列表
     QList<ProcessInfo*> getProcessList() override;
     // 获取系统总体资源（cpu、内存、GPU等等）
@@ -22,6 +22,7 @@ public:
 
 public slots:
     bool killProcess(qint64 pid) override;
+#endif
 
 };
 
