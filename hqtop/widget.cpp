@@ -1,6 +1,8 @@
 #include "widget.h"
 #include "ui_widget.h"
 
+#define myDebug() qDebug()<< "file: " << __FILE__ << "line: " << __LINE__ << "function: " << __FUNCTION__;
+
 
 /* 本类涉及到的多为与 UI 有关操作，因此无法在子线程中运行，封装的底层函数直接调用即可完成程序功能
  *
@@ -39,20 +41,23 @@ Widget::Widget(QWidget *parent)
 
 #ifdef Q_OS_WIN
 
-    this->dataprovider = new WindowsDataProvider();
+
+        this->dataprovider = new WindowsDataProvider();
 
 #elif defined(Q_OS_LINUX)
 
     this->dataprovider = new LinuxDataProvider();
 
 #endif
+
+
+
     this->dataCollector = new DataCollector(this->dataprovider);
     this->processmanager = new ProcessesManager();
     this->resourceanalyzer = new ResourceAnalyzer();
     this->myTableModel = new ProcessTableModel(this->setting, this->processmanager, ui->processesTableView);
     this->resourceWidget = new ResourceWidget(this->resourceanalyzer);
     this->settingWidget = new SettingWidget(setting);
-
 
     // 启动程序即开始收集数据
 
@@ -155,10 +160,16 @@ Widget::Widget(QWidget *parent)
     connect(this->settingWidget, &SettingWidget::themeChanged,
                     this, &Widget::loadTheme);
 
+
+
     int interval_time = setting->load<int>("Timer(ms)/interval time");
 
+    if(!interval_time)
+        interval_time = 1000;
     // 启动收集者 指定时间间隔为 interval_time
     dataCollector->startCollection(interval_time);
+
+
 
     // 将 TableView 的内容显示出来
     ui->processesTableView->setModel(this->myTableModel);
@@ -181,7 +192,7 @@ void Widget::onProcessesNumberChanged(qint64 processesNumber)
 
 Widget::~Widget()
 {
-    delete ui;
+    delete settingWidget;
     delete resourceWidget;
     delete myTableModel;
     delete resourceanalyzer;
@@ -190,6 +201,8 @@ Widget::~Widget()
     delete dataprovider;
     logger->shutdown_logger();
     delete logger;
+    delete setting;
+    delete ui;
 }
 
 void Widget::onProcessesPageShow()
