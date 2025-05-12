@@ -5,6 +5,7 @@
 #include <QList>
 #include <QDebug>
 #include <QThread>
+#include <QMutex>
 
 #include "linuxprocessinfo.h"
 #include "windowsprocessinfo.h"
@@ -19,14 +20,12 @@ public:
     ProcessesManager();
     ~ProcessesManager();
 
-    friend class ProcessTableModel;
-
-    void requestAsyncSort(int column, Qt::SortOrder order);
-    void filterByName(QString name);
+//    void requestAsyncSort(int column, Qt::SortOrder order);
+//    void filterByName(QString name);
     void killProcess(qint64 pid);
 
-    // 此处用信号与槽 将进程列表传到 processTableModel 中 此函数不调用
-//    QList<ProcessInfo*> getProcesses();
+
+    QList<ProcessInfo*> getProcesses();
 public slots:
     void handldProcessUpdate(const QList<ProcessInfo*> processes);
 
@@ -46,6 +45,7 @@ private:
     QList<ProcessInfo*> m_processes;
     QThread m_workerThread;
 //    QList<ProcessTableModel::ProcessEntry> m_processes;
+    QMutex m_mutex;
 };
 
 #endif // PROCESSMANAGER_H

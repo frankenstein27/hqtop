@@ -76,7 +76,7 @@ Widget::Widget(QWidget *parent)
      * 由于 dataCollector 整个对象都被移至子线程中，所以此信号也由子线程发出
      */
     connect(this->dataCollector, &DataCollector::updateProcesses, this->processmanager,
-                    &ProcessesManager::handldProcessUpdate);
+                    &ProcessesManager::handldProcessUpdate,Qt::QueuedConnection);
 
     /* 2.收集进程和系统资源
      * 若切换到进程页面（默认为此页面），收集进程和系统资源信息

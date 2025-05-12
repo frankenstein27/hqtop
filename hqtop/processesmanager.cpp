@@ -1,5 +1,8 @@
 #include "processesmanager.h"
 
+#define winDebug() qDebug() << "pid: " << info->pid() << " name: " << info->name() << " CPU: " << info->cpuUsage() << " Mem: " << info->memoryUsage() << " path: " << info->path() << " isForeground" << info->getState();
+
+
 /*  本类的构造函数开启了线程 P2 ，因此本类所有函数均运行在线程 P2 中
  *
  */
@@ -18,6 +21,7 @@ ProcessesManager::~ProcessesManager()
     this->m_workerThread.wait();
 }
 
+
 QList<ProcessInfo*> ProcessesManager::deepCopyList(const QList<ProcessInfo*>& original) {
     QList<ProcessInfo*> newList;
     for (ProcessInfo* obj : original)
@@ -30,6 +34,12 @@ QList<ProcessInfo*> ProcessesManager::deepCopyList(const QList<ProcessInfo*>& or
     return newList;
 }
 
+
+QList<ProcessInfo*> ProcessesManager::getProcesses()
+{
+    QMutexLocker locker(&m_mutex);
+    return deepCopyList(m_processes);
+}
 
 /*
 void ProcessManager::handldProcessUpdate(const QList<ProcessInfo*> processes)
@@ -76,13 +86,24 @@ void ProcessManager::handldProcessUpdate(const QList<ProcessInfo*> processes)
 
 void ProcessesManager::handldProcessUpdate(const QList<ProcessInfo*> processes)
 {
+    // 深拷贝前确保旧数据已清理
+    QMutexLocker locker(&m_mutex);
+    qDeleteAll(this->m_processes);
     this->m_processes = deepCopyList(processes);
 
     qDeleteAll(processes);
+    /* 此处没有问题，问题应该出现在后面的对列表处理的位置
+    for(auto *winProc : m_processes)
+    {
+        WindowsProcessInfo *info = dynamic_cast<WindowsProcessInfo*>(winProc);
+        winDebug()
+    }
+    */
 
     // 发出进程更新信号
     emit processesUpdated();
 }
+
 
 void ProcessesManager::killProcess(qint64 pid)
 {

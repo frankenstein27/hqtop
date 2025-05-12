@@ -20,6 +20,7 @@ ProcessTableModel::ProcessTableModel(Setting *setting,ProcessesManager
     , m_checkedProcess(-1)
     , mylogger(spdlog::get("global_logger"))
     , m_setting(setting)
+    , m_firstGetInfo(true)
 {
     // 关联：进程信息更新信号（来自ProcessManager），由 onProcessesUpdate 处理
 
@@ -53,6 +54,8 @@ ProcessTableModel::~ProcessTableModel()
     delete m_manager;
     m_sortThread->quit();
     m_sortThread->wait();
+    qDeleteAll(m_processes);
+    qDeleteAll(m_originalProcesses);
     delete m_processesDisposeWorker;
 }
 
@@ -64,17 +67,21 @@ void ProcessTableModel::onProcessesUpdate()
     // 直接更新（若数据变动较小，则有很多无意义的读写，浪费性能）
 //    this->m_originalProcesses = processes;
 //    this->applyFilter();
+    QList<ProcessInfo*> newProcesses = m_manager->getProcesses();
+    // getProcesses 实现了深拷贝，所以 newProcesses 持有独立的进程信息。
 
     // 原始进程信息长度为0（第一次收集到进程数据），直接拷贝即可
-    if(!this->m_manager->m_processes.size())
+    if(m_firstGetInfo)
     {
-        m_originalProcesses = m_manager->deepCopyList(m_manager->m_processes);
+        m_firstGetInfo = false;
+        m_originalProcesses = newProcesses;
+        // m_originalProcesses 持有 newProcesses 的副本，即使 newProcesses 被销毁，m_originalProcesses 仍然持有（因为QList的析构函数不会删除指针指向的对象）
         this->applyFilter();
     }
     else
     {
         // 在此处找出变化的项 进行增量更新：将与原来不相等的进程替换
-        int newProcessesSize = m_manager->m_processes.size();
+        int newProcessesSize = newProcesses.size();
         int oldProcessesSize = m_originalProcesses.size();
         int minProcessesSize = qMin(newProcessesSize, oldProcessesSize);
 
@@ -83,7 +90,7 @@ void ProcessTableModel::onProcessesUpdate()
         QString log_str;
         for (int i = 0; i < minProcessesSize; ++i)
         {
-            process = m_manager->m_processes[i];
+            process = newProcesses[i];
 
             if(process->cpuUsage() >= 8.0)
             {
@@ -101,6 +108,7 @@ void ProcessTableModel::onProcessesUpdate()
 
             if (m_originalProcesses[i] != process)
             {
+                delete m_originalProcesses[i];
                 m_originalProcesses[i] = process;
                 QModelIndex topLeft = createIndex(i, 0);                            // 第 i 行的第一格
                 QModelIndex bottomRight = createIndex(i, columnCount() - 1);        // 第 i 行的第 columnCount 格
@@ -115,7 +123,7 @@ void ProcessTableModel::onProcessesUpdate()
             beginInsertRows(QModelIndex(), newProcessesStartIndex, newProcessesEndIndex);
             for (int i = newProcessesStartIndex; i <= newProcessesEndIndex; ++i)
             {
-                m_originalProcesses.append(m_manager->m_processes[i]);
+                m_originalProcesses.append(newProcesses[i]);
             }
             endInsertRows();
         }
@@ -129,6 +137,7 @@ void ProcessTableModel::onProcessesUpdate()
             beginRemoveRows(QModelIndex(), newProcessesEndIndex, oldProcessesEndIndex);
             for(int i = oldProcessesEndIndex; i >= newProcessesEndIndex; --i)
             {
+                delete m_originalProcesses[i];
                 m_originalProcesses.removeAt(i);
             }
             endRemoveRows();
@@ -146,7 +155,7 @@ void ProcessTableModel::applyFilter()
     if(this->m_filterText.isEmpty())
     {   // 如果未输入任何过滤内容 要展示的数据即为所有数据 无需进入子线程
         beginResetModel();
-        this->m_processes = m_manager->deepCopyList(m_originalProcesses);
+        this->m_processes = m_originalProcesses;
         endResetModel();
         // 只要有过排序请求的点击 即进行排序处理
         if(-1 != m_sortedColumn)
@@ -175,7 +184,7 @@ void ProcessTableModel::asyncFilter()
 void ProcessTableModel::onFilterFinished(QList<ProcessInfo*> filteredProcesses)
 {
     beginResetModel();
-    this->m_processes = m_manager->deepCopyList(filteredProcesses);
+    this->m_processes = filteredProcesses;
     endResetModel();
 
     if(-1 != m_sortedColumn)
@@ -208,7 +217,7 @@ void ProcessTableModel::sort(int column, Qt::SortOrder order)
 void ProcessTableModel::requestAsyncSort(int column, Qt::SortOrder order)
 {
     // 复制一份数据，防止当前线程中数据被修改
-    QList<ProcessInfo*> processWaitSort = m_manager->deepCopyList(m_processes);
+    QList<ProcessInfo*> processWaitSort = m_processes;
 
     // 启动 m_processesDisposeWorker 进行排序，参数含义：启动哪一个子线程，其中的哪个函数，参数1（类型，名）,参数2......
     QMetaObject::invokeMethod(this->m_processesDisposeWorker, "sortProcesses",
@@ -226,7 +235,7 @@ void ProcessTableModel::onSortFinished(QList<ProcessInfo*> sortedProcesses,int c
     beginResetModel();
 
     // 更新视图模型
-    m_processes = m_manager->deepCopyList(sortedProcesses);
+    m_processes = sortedProcesses;
     if(m_isMsgBox)
     {
         qDebug() << "无法排序" << column;
@@ -313,14 +322,12 @@ QVariant ProcessTableModel::data(const QModelIndex &index, int role) const
                 {
                     WindowsProcessInfo* winProc = dynamic_cast<WindowsProcessInfo*>(process);
                     QString path = winProc->path();
-                    delete winProc;
                     return path;
                 }
                 else
                 {
                     LinuxProcessInfo* linuxProc = dynamic_cast<LinuxProcessInfo*>(process);
                     QString user = linuxProc->user();
-                    delete linuxProc;
                     return user;
                 }
             case 3:
@@ -328,7 +335,6 @@ QVariant ProcessTableModel::data(const QModelIndex &index, int role) const
                 {
                     WindowsProcessInfo* winProc = dynamic_cast<WindowsProcessInfo*>(process);
                     bool isF = winProc->getState();
-                    delete winProc;
                     if(isF)
                         return "后台进程";
                     else
@@ -338,7 +344,6 @@ QVariant ProcessTableModel::data(const QModelIndex &index, int role) const
                 {
                     LinuxProcessInfo* linuxProc = dynamic_cast<LinuxProcessInfo*>(process);
                     QString state = linuxProc->state();
-                    delete linuxProc;
                     return state;
                 }
             case 4:

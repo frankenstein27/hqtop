@@ -105,6 +105,8 @@ private:
     QVector<QString> m_columnName;
     // 设置
     Setting *m_setting;
+    // 是否第一次获取进程信息
+    bool m_firstGetInfo;
 };
 
 #endif // PROCESSTABLEMODEL_H
