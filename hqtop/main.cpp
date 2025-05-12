@@ -11,14 +11,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     Widget w;
 
-    qRegisterMetaType<ProcessInfo*>("ProcessInfo*");
-    qRegisterMetaType<WindowsProcessInfo*>("WindowsProcessInfo*");
-    qRegisterMetaType<LinuxProcessInfo*>("LinuxProcessInfo*");
-    qRegisterMetaType<QList<ProcessInfo*>>("QList<ProcessInfo*>");
-    qRegisterMetaType<QList<WindowsProcessInfo*>>("QList<WindowsProcessInfo*>");
-    qRegisterMetaType<QList<LinuxProcessInfo*>>("QList<LinuxProcessInfo*>");
-    qRegisterMetaType<SystemResource>("SystemResource");
-    qRegisterMetaType<Qt::SortOrder>("Qt::SortOrder");
+
 
 
     w.show();

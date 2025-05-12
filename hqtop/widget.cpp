@@ -12,6 +12,16 @@ Widget::Widget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::Widget)
 {
+    qRegisterMetaType<ProcessInfo*>("ProcessInfo*");
+    qRegisterMetaType<WindowsProcessInfo*>("WindowsProcessInfo*");
+    qRegisterMetaType<LinuxProcessInfo*>("LinuxProcessInfo*");
+    qRegisterMetaType<QList<ProcessInfo*>>("QList<ProcessInfo*>");
+    qRegisterMetaType<QList<WindowsProcessInfo*>>("QList<WindowsProcessInfo*>");
+    qRegisterMetaType<QList<LinuxProcessInfo*>>("QList<LinuxProcessInfo*>");
+    qRegisterMetaType<SystemResource>("SystemResource");
+    qRegisterMetaType<Qt::SortOrder>("Qt::SortOrder");
+
+
     ui->setupUi(this);
 
     // 启用 tableView 排序功能
@@ -195,8 +205,9 @@ Widget::~Widget()
     delete settingWidget;
     delete resourceWidget;
     delete myTableModel;
-    delete resourceanalyzer;
-    delete processmanager;
+
+//    delete processmanager;   在销毁 ProcessTableModel 时，已经将其销毁（ProcessTableModel的析构函数）
+//    delete resourceanalyzer; 在销毁 resourceWidget 时，已经将其销毁（resourceWidget的析构函数 ）
     delete dataCollector;
     delete dataprovider;
     logger->shutdown_logger();
