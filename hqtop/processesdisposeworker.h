@@ -3,6 +3,8 @@
 
 #include <QObject>
 
+#include <spdlog/spdlog.h>
+
 
 #include "linuxprocessinfo.h"
 #include "windowsprocessinfo.h"
@@ -21,6 +23,9 @@ public slots:
 signals:
     void sortFinished(QList<ProcessInfo*> sortedProcesses,bool isMsgBox,int column);
     void filtFinished(QList<ProcessInfo*> filteredProcesses);
+
+private:
+    std::shared_ptr<spdlog::logger> mylogger;
 };
 
 #endif // WORKER_H

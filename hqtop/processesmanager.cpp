@@ -84,14 +84,18 @@ void ProcessManager::handldProcessUpdate(const QList<ProcessInfo*> processes)
 }
 */
 
-void ProcessesManager::handldProcessUpdate(const QList<ProcessInfo*> processes)
+void ProcessesManager::handldProcessUpdate(QList<ProcessInfo*> processes)
 {
     // 深拷贝前确保旧数据已清理
-    QMutexLocker locker(&m_mutex);
-    qDeleteAll(this->m_processes);
-    this->m_processes = deepCopyList(processes);
+    {
+        QMutexLocker locker(&m_mutex);
+        qDeleteAll(this->m_processes);
+        m_processes.clear();
+        this->m_processes = deepCopyList(processes);
+    }
 
     qDeleteAll(processes);
+    processes.clear();
     /* 此处没有问题，问题应该出现在后面的对列表处理的位置
     for(auto *winProc : m_processes)
     {

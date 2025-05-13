@@ -1,6 +1,7 @@
 #include "processesdisposeworker.h"
 
 ProcessesDisposeWorker::ProcessesDisposeWorker(QObject *parent) : QObject(parent)
+  , mylogger(spdlog::get("global_logger"))
 {
 
 }
@@ -9,11 +10,12 @@ ProcessesDisposeWorker::ProcessesDisposeWorker(QObject *parent) : QObject(parent
 void ProcessesDisposeWorker::filterProcesses(QList<ProcessInfo*> processesWaitFilter,
                                                 QString filterFactor,QString filterText)
 {
-    QList<ProcessInfo*> filteredProcesses;
     bool match;
-
+    QList<ProcessInfo*> filteredProcesses;
+    QList<ProcessInfo*> waitDeleteProc;
     for(ProcessInfo *process : processesWaitFilter)
     {
+//        qDebug() << "filter: " << process->pid();
         // 根据匹配到的 process（通过contains函数找到是否包含）,包含即加入要展示的数据 反之不做处理
         match = false;
         if (filterFactor == "pid")
@@ -27,11 +29,21 @@ void ProcessesDisposeWorker::filterProcesses(QList<ProcessInfo*> processesWaitFi
 #ifdef Q_OS_WIN
         {
             WindowsProcessInfo *winProc = dynamic_cast<WindowsProcessInfo*>(process);
+            if(!winProc)
+            {
+                mylogger->warn("Dynamic cast to WindowsProcessInfo failed for PID:" + QString::number(process->pid()).toStdString());
+                continue;
+            }
             match = winProc->path().contains(filterText, Qt::CaseInsensitive);
         }
         else if (filterFactor == "state")
         {
             WindowsProcessInfo *winProc = dynamic_cast<WindowsProcessInfo*>(process);
+            if(!winProc)
+            {
+                mylogger->warn("Dynamic cast to WindowsProcessInfo failed for PID:" + QString::number(process->pid()).toStdString());
+                continue;
+            }
             if(filterText == "yes" && winProc->getState())
                 match = true;
             else if(filterText == "no" && !winProc->getState())
@@ -40,19 +52,35 @@ void ProcessesDisposeWorker::filterProcesses(QList<ProcessInfo*> processesWaitFi
 #elif defined (Q_OS_LINUX)
         {
             LinuxProcessInfo *linuxProc = dynamic_cast<LinuxProcessInfo*>(process);
+            if(!linuxProc)
+            {
+                mylogger->warn("Dynamic cast to LinuxProcessInfo failed for PID:" + QString::number(process->pid()).toStdString());
+                continue;
+            }
             match = linuxProc->user().contains(filterText, Qt::CaseInsensitive);
         }
         else if (filterFactor == "state")
         {
             LinuxProcessInfo *linuxProc = dynamic_cast<LinuxProcessInfo*>(process);
+            if(!linuxProc)
+            {
+                mylogger->warn("Dynamic cast to LinuxProcessInfo failed for PID:" + QString::number(process->pid()).toStdString());
+                continue;
+            }
             match = linuxProc->state().contains(filterText, Qt::CaseInsensitive);
         }
 #endif
-        if (match) {
+        if (match)
+        {
             filteredProcesses.append(process);
         }
+        else
+        {
+            waitDeleteProc.append(process);
+        }
     }
-
+    qDeleteAll(waitDeleteProc);
+    waitDeleteProc.clear();
     emit filtFinished(filteredProcesses);
 }
 

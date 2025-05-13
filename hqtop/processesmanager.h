@@ -26,15 +26,14 @@ public:
 
 
     QList<ProcessInfo*> getProcesses();
+
+    QList<ProcessInfo*> deepCopyList(const QList<ProcessInfo*>& original);
 public slots:
     void handldProcessUpdate(const QList<ProcessInfo*> processes);
 
 signals:
     void processesUpdated();
-    void killProcessSignal(qint64 pid);
-
-private:
-    QList<ProcessInfo*> deepCopyList(const QList<ProcessInfo*>& original);
+    void killProcessSignal(qint64 pid);    
 
 private:
     // processes 指针形式：会在 handleProcessUpdate 中触发浅拷贝，若为值形式：会调用 QList 的赋值运算符，即深拷贝

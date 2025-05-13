@@ -55,7 +55,9 @@ ProcessTableModel::~ProcessTableModel()
     m_sortThread->quit();
     m_sortThread->wait();
     qDeleteAll(m_processes);
+    m_processes.clear();
     qDeleteAll(m_originalProcesses);
+    m_originalProcesses.clear();
     delete m_processesDisposeWorker;
 }
 
@@ -71,6 +73,7 @@ void ProcessTableModel::onProcessesUpdate()
     // getProcesses 实现了深拷贝，所以 newProcesses 持有独立的进程信息。
 
     // 原始进程信息长度为0（第一次收集到进程数据），直接拷贝即可
+    // 此处 m_firstGetInfo 变量是否多余还需考证
     if(m_firstGetInfo)
     {
         m_firstGetInfo = false;
@@ -115,7 +118,7 @@ void ProcessTableModel::onProcessesUpdate()
                 emit dataChanged(topLeft, bottomRight);                             // 局部刷新
             }
         }
-        // 处理新增或删除的行：由于/proc/目录下的文件都是按照新旧顺序排放，所以新进程自然而然在后面
+        // 处理新增或删除的行
         if (newProcessesSize > oldProcessesSize)
         {
             int newProcessesStartIndex = oldProcessesSize;
@@ -151,11 +154,10 @@ void ProcessTableModel::onProcessesUpdate()
 // 过滤：如果没有过滤内容直接赋值过滤后的数据为完整数据，反之如果match到了，append到过滤后的数据
 void ProcessTableModel::applyFilter()
 {
-
     if(this->m_filterText.isEmpty())
     {   // 如果未输入任何过滤内容 要展示的数据即为所有数据 无需进入子线程
         beginResetModel();
-        this->m_processes = m_originalProcesses;
+        this->m_processes = m_manager->deepCopyList(m_originalProcesses);
         endResetModel();
         // 只要有过排序请求的点击 即进行排序处理
         if(-1 != m_sortedColumn)
@@ -171,10 +173,15 @@ void ProcessTableModel::applyFilter()
 // 异步过滤，在子线程中完成逻辑
 void ProcessTableModel::asyncFilter()
 {
-    QList<ProcessInfo*> processWaitFilter = m_originalProcesses;
+    {
+        QMutexLocker locker(&m_mutex);
+//        qDeleteAll(m_processWaitFilter);
+//        m_processWaitFilter.clear();
+        m_processWaitFilter = m_manager->deepCopyList(m_originalProcesses);
+    }
 
     QMetaObject::invokeMethod(this->m_processesDisposeWorker, "filterProcesses",
-                              Q_ARG(QList<ProcessInfo*>, processWaitFilter),
+                              Q_ARG(QList<ProcessInfo*>, m_processWaitFilter),
                               Q_ARG(QString, this->m_filterFactor),
                               Q_ARG(QString, this->m_filterText));
 }
@@ -183,9 +190,15 @@ void ProcessTableModel::asyncFilter()
 // 过滤完成接收的槽函数
 void ProcessTableModel::onFilterFinished(QList<ProcessInfo*> filteredProcesses)
 {
+//    qDeleteAll(m_temp);
+//    m_temp.clear();
     beginResetModel();
-    this->m_processes = filteredProcesses;
+    qDeleteAll(m_processes);
+    m_processes.clear();
+    this->m_processes = m_manager->deepCopyList(filteredProcesses);
     endResetModel();
+    qDeleteAll(filteredProcesses);
+    filteredProcesses.clear();
 
     if(-1 != m_sortedColumn)
         sort(m_sortedColumn, m_sortOrder);
@@ -218,6 +231,10 @@ void ProcessTableModel::requestAsyncSort(int column, Qt::SortOrder order)
 {
     // 复制一份数据，防止当前线程中数据被修改
     QList<ProcessInfo*> processWaitSort = m_processes;
+    {
+        QMutexLocker locker(&m_mutex);
+        processWaitSort = m_manager->deepCopyList(m_processes);
+    }
 
     // 启动 m_processesDisposeWorker 进行排序，参数含义：启动哪一个子线程，其中的哪个函数，参数1（类型，名）,参数2......
     QMetaObject::invokeMethod(this->m_processesDisposeWorker, "sortProcesses",
@@ -233,18 +250,20 @@ void ProcessTableModel::onSortFinished(QList<ProcessInfo*> sortedProcesses,int c
 {
     // 通知视图即将更新
     beginResetModel();
-
+    qDeleteAll(m_processes);
+    m_processes.clear();
     // 更新视图模型
     m_processes = sortedProcesses;
+    // 结束视图模型更新
+    endResetModel();
+
     if(m_isMsgBox)
     {
         qDebug() << "无法排序" << column;
         QMessageBox::warning(nullptr, "warning", "无法排序");
     }
-    emit processesNumberChanged(m_processes.size());
 
-    // 结束试图模型更新
-    endResetModel();
+    emit processesNumberChanged(m_processes.size());
 }
 
 // （暂未实现）自定义列数据

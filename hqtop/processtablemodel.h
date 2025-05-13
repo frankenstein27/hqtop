@@ -68,6 +68,7 @@ private:
     QList<ProcessInfo*> m_originalProcesses;
     // 缓存过滤、排序之后进程数据（真正要现实的数据）
     QList<ProcessInfo*> m_processes;
+    QList<ProcessInfo*> m_processWaitFilter;
 
 /*
 #ifdef  Q_OS_WIN
@@ -107,6 +108,7 @@ private:
     Setting *m_setting;
     // 是否第一次获取进程信息
     bool m_firstGetInfo;
+    QMutex m_mutex;
 };
 
 #endif // PROCESSTABLEMODEL_H
