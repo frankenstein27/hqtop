@@ -25,7 +25,7 @@ public:
     QList<ProcessInfo*> getProcessList() override;
     SystemResource* getSystemResource() override;
 
-    qint64 getCpuNum();
+    qint64 getCpuCoresNumber() override;
     qint64 cpuNum = 0;
 
 public slots:

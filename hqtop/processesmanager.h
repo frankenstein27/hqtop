@@ -28,6 +28,7 @@ public:
     QList<ProcessInfo*> getProcesses();
 
     QList<ProcessInfo*> deepCopyList(const QList<ProcessInfo*>& original);
+    QList<ProcessInfo*> rangeDeepCopyList(const QList<ProcessInfo*>& original, int startIndex, int endIndex);
 public slots:
     void handldProcessUpdate(const QList<ProcessInfo*> processes);
 

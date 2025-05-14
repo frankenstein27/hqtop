@@ -19,6 +19,8 @@ public:
     // 获取系统总体资源
     virtual SystemResource* getSystemResource() = 0;
 
+    virtual qint64 getCpuCoresNumber() = 0;
+
 
     // 析构函数
     virtual ~SystemDataProvider() = default;

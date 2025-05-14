@@ -69,6 +69,7 @@ private:
     // 缓存过滤、排序之后进程数据（真正要现实的数据）
     QList<ProcessInfo*> m_processes;
     QList<ProcessInfo*> m_processWaitFilter;
+    QList<ProcessInfo*> m_newProcesses;
 
 /*
 #ifdef  Q_OS_WIN

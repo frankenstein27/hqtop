@@ -22,10 +22,31 @@ ProcessesManager::~ProcessesManager()
 }
 
 
-QList<ProcessInfo*> ProcessesManager::deepCopyList(const QList<ProcessInfo*>& original) {
+QList<ProcessInfo*> ProcessesManager::deepCopyList(const QList<ProcessInfo*>& original)
+{
     QList<ProcessInfo*> newList;
     for (ProcessInfo* obj : original)
     {
+        if (obj)
+            newList.append(obj->clone()); // 多态调用 clone()
+        else
+            newList.append(nullptr); // 处理空指针
+    }
+    return newList;
+}
+
+QList<ProcessInfo*> ProcessesManager::rangeDeepCopyList(const QList<ProcessInfo*>& original,
+                                                        int startIndex, int endIndex)
+{
+    if(startIndex < 0)
+        startIndex = 0;
+    if(endIndex >= original.size())
+        endIndex = original.size() - 1;
+    QList<ProcessInfo*> newList;
+    ProcessInfo* obj;
+    for (int i = startIndex;i <= endIndex; ++i)
+    {
+        obj = original.at(i);
         if (obj)
             newList.append(obj->clone()); // 多态调用 clone()
         else

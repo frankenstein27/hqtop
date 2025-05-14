@@ -66,34 +66,41 @@ ProcessTableModel::~ProcessTableModel()
 // 保存原始数据之后即调用过滤函数
 void ProcessTableModel::onProcessesUpdate()
 {
-    // 直接更新（若数据变动较小，则有很多无意义的读写，浪费性能）
-//    this->m_originalProcesses = processes;
-//    this->applyFilter();
-    QList<ProcessInfo*> newProcesses = m_manager->getProcesses();
+/* 直接更新（若数据变动较小，则有很多无意义的读写，浪费性能）
+    this->m_originalProcesses = processes;
+    this->applyFilter();
+*/
+
+/* 如果简单的删除，会导致 m_originalProcesses 中未变动的进程信息也被删除
+    qDeleteAll(m_newProcesses);
+    m_newProcesses.clear();
+*/
+    // 如果简单的更新，则会导致之前的 m_newProcesses 成为悬垂指针，导致程序内存占用持续升高
+    m_newProcesses = m_manager->getProcesses();
     // getProcesses 实现了深拷贝，所以 newProcesses 持有独立的进程信息。
 
-    // 原始进程信息长度为0（第一次收集到进程数据），直接拷贝即可
-    // 此处 m_firstGetInfo 变量是否多余还需考证
+    // 第一次收集到进程数据，直接拷贝即可（此处 m_firstGetInfo 变量是否多余还需考证）
     if(m_firstGetInfo)
     {
         m_firstGetInfo = false;
-        m_originalProcesses = newProcesses;
+        m_originalProcesses = m_newProcesses;
         // m_originalProcesses 持有 newProcesses 的副本，即使 newProcesses 被销毁，m_originalProcesses 仍然持有（因为QList的析构函数不会删除指针指向的对象）
         this->applyFilter();
     }
     else
     {
         // 在此处找出变化的项 进行增量更新：将与原来不相等的进程替换
-        int newProcessesSize = newProcesses.size();
+        int newProcessesSize = m_newProcesses.size();
         int oldProcessesSize = m_originalProcesses.size();
         int minProcessesSize = qMin(newProcessesSize, oldProcessesSize);
 
         ProcessInfo *process;
 
         QString log_str;
+        // 此 for 循环先更新旧进程信息变动
         for (int i = 0; i < minProcessesSize; ++i)
         {
-            process = newProcesses[i];
+            process = m_newProcesses[i];
 
             if(process->cpuUsage() >= 8.0)
             {
@@ -107,18 +114,26 @@ void ProcessTableModel::onProcessesUpdate()
                 log_str = "High Memory Used! Pid: " + QString::number(process->pid()) +
                         "   Name: " + process->name() +
                         "   Memory Used: " + QString::number(process->memoryUsage()) + "MB";
+                mylogger->warn(log_str.toStdString());
             }
 
             if (m_originalProcesses[i] != process)
             {
+                // 删除旧的指针，将此元素赋值为新指针
                 delete m_originalProcesses[i];
                 m_originalProcesses[i] = process;
+
                 QModelIndex topLeft = createIndex(i, 0);                            // 第 i 行的第一格
                 QModelIndex bottomRight = createIndex(i, columnCount() - 1);        // 第 i 行的第 columnCount 格
                 emit dataChanged(topLeft, bottomRight);                             // 局部刷新
             }
+            else    // 如果旧进程和新进程完全相同，则将得到的新进程删除
+            {
+                delete process;
+                m_newProcesses.removeAt(i--);
+            }
         }
-        // 处理新增或删除的行
+        // 处理新增或删除的进程
         if (newProcessesSize > oldProcessesSize)
         {
             int newProcessesStartIndex = oldProcessesSize;
@@ -126,7 +141,7 @@ void ProcessTableModel::onProcessesUpdate()
             beginInsertRows(QModelIndex(), newProcessesStartIndex, newProcessesEndIndex);
             for (int i = newProcessesStartIndex; i <= newProcessesEndIndex; ++i)
             {
-                m_originalProcesses.append(newProcesses[i]);
+                m_originalProcesses.append(m_newProcesses[i]);
             }
             endInsertRows();
         }
@@ -157,6 +172,8 @@ void ProcessTableModel::applyFilter()
     if(this->m_filterText.isEmpty())
     {   // 如果未输入任何过滤内容 要展示的数据即为所有数据 无需进入子线程
         beginResetModel();
+        qDeleteAll(m_processes);
+        m_processes.clear();
         this->m_processes = m_manager->deepCopyList(m_originalProcesses);
         endResetModel();
         // 只要有过排序请求的点击 即进行排序处理
@@ -190,8 +207,6 @@ void ProcessTableModel::asyncFilter()
 // 过滤完成接收的槽函数
 void ProcessTableModel::onFilterFinished(QList<ProcessInfo*> filteredProcesses)
 {
-//    qDeleteAll(m_temp);
-//    m_temp.clear();
     beginResetModel();
     qDeleteAll(m_processes);
     m_processes.clear();
@@ -222,7 +237,6 @@ void ProcessTableModel::sort(int column, Qt::SortOrder order)
 
     // 调用异步排序
     this->requestAsyncSort(column, order);
-//    m_manager->requestAsyncSort(column, order);
 }
 
 

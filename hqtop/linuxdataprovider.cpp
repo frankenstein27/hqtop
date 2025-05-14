@@ -327,7 +327,7 @@ void LinuxDataProvider::getKernelPageSize()
 }
 
 // 获取 cpu 核心数量
-qint64 LinuxDataProvider::getCpuNum()
+qint64 LinuxDataProvider::getCpuCoresNumber()
 {
     if(this->cpuNum)
         return this->cpuNum;
