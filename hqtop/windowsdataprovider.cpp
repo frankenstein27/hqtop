@@ -70,13 +70,13 @@ QList<ProcessInfo*> WindowsDataProvider::getProcessList()
                         const CpuUsageData& prev = it->second;
                         double timeDiff = currentTime - prev.timestamp;
 
-                        if (timeDiff > 0.01)
+
+                        if (timeDiff > 0.4)
                         {
                             double cpuDiff = currentTotalTime - prev.totalTime;
-                            // 进程占单颗核心利用率
-//                            double usagePercent = (cpuDiff * 100.0) / (double)(timeDiff * 10000);
+                            double wallSec = currentTime - prev.timestamp;
                             // 计算 进程占总cpu利用率
-                            double usagePercent = (cpuDiff * 100.0) / (double)(timeDiff * 1e7);
+                            double usagePercent = ((cpuDiff / 1e7) / ( wallSec * m_cpuCores)) * 100.0;
 
                             usagePercent = QString::number(usagePercent,'f',2).toDouble();
                             info->setCpuUsage(usagePercent);
