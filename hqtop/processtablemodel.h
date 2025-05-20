@@ -43,6 +43,10 @@ public slots:
     // 删除按钮被按下
     void onDeletePushButtonClicked();
 
+    void handleCPUWarningValueChanged(double newValue);
+
+    void handleMemWarningValueChanged(int newValue);
+
 private slots:
     // 进程数据更新 信号由 processmanager 发来
     void onProcessesUpdate();
@@ -110,6 +114,8 @@ private:
     // 是否第一次获取进程信息
     bool m_firstGetInfo;
     QMutex m_mutex;
+    double CPUWarningValue;
+    int MemWarningValue;
 };
 
 #endif // PROCESSTABLEMODEL_H

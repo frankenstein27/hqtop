@@ -96,7 +96,7 @@ void ProcessesDisposeWorker::sortProcesses(QList<ProcessInfo*> processesWaitSort
         std::sort(processesWaitSort.begin(), processesWaitSort.end(),
                             [order](const ProcessInfo *a, const ProcessInfo *b)
         {
-            return (order == Qt::AscendingOrder) ? (a->pid() > b->pid()) : (a->pid() < b->pid());
+            return (order == Qt::AscendingOrder) ? (a->pid() < b->pid()) : (a->pid() > b->pid());
         });
         break;
     case 1:  // Name 列
@@ -105,7 +105,7 @@ void ProcessesDisposeWorker::sortProcesses(QList<ProcessInfo*> processesWaitSort
                             [order](const ProcessInfo *a, const ProcessInfo *b)
         {
             return (order == Qt::AscendingOrder) ?
-                        (a->name() > b->name()) : (a->name() < b->name());
+                        (a->name() < b->name()) : (a->name() > b->name());
         });
         break;
 #ifdef Q_OS_WIN
@@ -117,7 +117,7 @@ void ProcessesDisposeWorker::sortProcesses(QList<ProcessInfo*> processesWaitSort
             WindowsProcessInfo* winA = dynamic_cast<WindowsProcessInfo*>(a);
             WindowsProcessInfo* winB = dynamic_cast<WindowsProcessInfo*>(b);
             return (order == Qt::AscendingOrder) ?
-                        (winA->path() > winB->path()) : (winB->path() < winB->path());
+                        (winA->path() < winB->path()) : (winB->path() > winB->path());
         });
         break;
     case 3:  // State 列
@@ -128,7 +128,7 @@ void ProcessesDisposeWorker::sortProcesses(QList<ProcessInfo*> processesWaitSort
             WindowsProcessInfo* winA = dynamic_cast<WindowsProcessInfo*>(a);
             WindowsProcessInfo* winB = dynamic_cast<WindowsProcessInfo*>(b);
             return (order == Qt::AscendingOrder) ?
-                        (winA->getState() > winB->getState()) : (winA->getState() < winB->getState());
+                        (winA->getState() < winB->getState()) : (winA->getState() > winB->getState());
         });
         break;
 #elif defined (Q_OS_LINUX)
@@ -140,7 +140,7 @@ void ProcessesDisposeWorker::sortProcesses(QList<ProcessInfo*> processesWaitSort
             LinuxProcessInfo* linA = dynamic_cast<LinuxProcessInfo*>(a);
             LinuxProcessInfo* linB = dynamic_cast<LinuxProcessInfo*>(b);
             return (order == Qt::AscendingOrder) ?
-                        (linA->user() > linB->user()) : (linA->user() < linB->user());
+                        (linA->user() < linB->user()) : (linA->user() > linB->user());
         });
         break;
     case 3:  // State 列
@@ -151,7 +151,7 @@ void ProcessesDisposeWorker::sortProcesses(QList<ProcessInfo*> processesWaitSort
             LinuxProcessInfo* linA = dynamic_cast<LinuxProcessInfo*>(a);
             LinuxProcessInfo* linB = dynamic_cast<LinuxProcessInfo*>(b);
             return (order == Qt::AscendingOrder) ?
-                        (linA->state() > linB->state()) : (linA->state() < linB->state());
+                        (linA->state() < linB->state()) : (linA->state() > linB->state());
         });
         break;
 #endif
@@ -161,7 +161,7 @@ void ProcessesDisposeWorker::sortProcesses(QList<ProcessInfo*> processesWaitSort
                             [order](const ProcessInfo *a, const ProcessInfo *b)
         {
             return (order == Qt::AscendingOrder) ?
-                        (a->cpuUsage() > b->cpuUsage()) : (a->cpuUsage() < b->cpuUsage());
+                        (a->cpuUsage() < b->cpuUsage()) : (a->cpuUsage() > b->cpuUsage());
         });
         break;
     case 5:  // Mem 列
@@ -170,7 +170,7 @@ void ProcessesDisposeWorker::sortProcesses(QList<ProcessInfo*> processesWaitSort
                             [order](const ProcessInfo *a, const ProcessInfo *b)
         {
             return (order == Qt::AscendingOrder) ?
-                    (a->memoryUsage() > b->memoryUsage()) : (a->memoryUsage() < b->memoryUsage());
+                    (a->memoryUsage() < b->memoryUsage()) : (a->memoryUsage() > b->memoryUsage());
         });
         break;
         // 其他列......

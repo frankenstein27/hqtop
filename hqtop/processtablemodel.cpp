@@ -33,6 +33,9 @@ ProcessTableModel::ProcessTableModel(Setting *setting,ProcessesManager
     QString tmp = this->m_setting->load<QString>("Sort/Name");
     this->m_sortedColumn = m_columnName.indexOf(tmp);
 
+    this->CPUWarningValue = m_setting->load<double>("Warning Value/CPU");
+    this->MemWarningValue = m_setting->load<int>("Warning Value/Mem");
+
     // 初始化线程和排序工作函数
     this->m_sortThread = new QThread(this);
     this->m_processesDisposeWorker = new ProcessesDisposeWorker();
@@ -102,14 +105,14 @@ void ProcessTableModel::onProcessesUpdate()
         {
             process = m_newProcesses[i];
 
-            if(process->cpuUsage() >= 8.0)
+            if(process->cpuUsage() >= CPUWarningValue)
             {
                 log_str = "High Cpu Usage! Pid: " + QString::number(process->pid()) +
                         "   Name: "+ process->name() +
                         "   Cpu Usage: " + QString::number(process->cpuUsage()) + "%";
                 mylogger->warn(log_str.toStdString());
             }
-            if(process->memoryUsage() >= 800)
+            if(process->memoryUsage() >= MemWarningValue)
             {
                 log_str = "High Memory Used! Pid: " + QString::number(process->pid()) +
                         "   Name: " + process->name() +
@@ -329,7 +332,8 @@ QVariant ProcessTableModel::data(const QModelIndex &index, int role) const
     ProcessInfo* process = this->m_processes.at(index.row());
     if(role == Qt::BackgroundRole)
     {
-        if(process->cpuUsage() >= 8.0 || process->memoryUsage() >= 800)
+        if(process->cpuUsage() >= CPUWarningValue ||
+                process->memoryUsage() >= MemWarningValue)
             return QBrush(QColor(218, 69, 9));
 /*        else
        {
@@ -445,4 +449,14 @@ int ProcessTableModel::columnCount(const QModelIndex &parent) const
     if(parent.isValid())
         return 0;
     return 6;           // PID、名称、用户、状态、CPU%、内存%
+}
+
+void ProcessTableModel::handleCPUWarningValueChanged(double newValue)
+{
+    this->CPUWarningValue = newValue;
+}
+
+void ProcessTableModel::handleMemWarningValueChanged(int newValue)
+{
+    this->MemWarningValue = newValue;
 }

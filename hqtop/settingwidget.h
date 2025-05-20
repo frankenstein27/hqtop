@@ -33,9 +33,15 @@ private slots:
 
     void on_NightModeRadioButton_toggled(bool checked);
 
+    void on_MemWarningComboBox_currentTextChanged(const QString &arg1);
+
+    void on_CPUWariningComboBox_currentTextChanged(const QString &arg1);
+
 signals:
     void logLevelChanged(QString newLevel);
     void themeChanged(QString newTheme);
+    void CPUWarningValueChanged(double newWarningValue);
+    void MemWarningValueChanged(int newWarningValue);
 
 private:
     Ui::SettingWidget *ui;
@@ -44,9 +50,14 @@ private:
     QString m_logLevel;
     int m_interval_time;
     QString m_curThemeMode;
+    double m_CPUValue;
+    int m_MemValue;
 
     QString m_newLogLevel;
     QString m_newThemeMode;
+    double m_newCPUValue;
+    int m_newMemValue;
+
     int m_newInterval_time;
     // 日志
     std::shared_ptr<spdlog::logger> mylogger;

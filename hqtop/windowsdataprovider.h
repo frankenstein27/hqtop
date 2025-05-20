@@ -31,6 +31,12 @@ public slots:
     bool killProcess(qint64 pid) override;
 
 private:
+
+    QString formatTime(double temp);
+
+    ULONGLONG FileTimeToUInt64(const FILETIME& ft) const {
+            return (static_cast<ULONGLONG>(ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+        }
     struct CpuUsageData
     {
         ULONGLONG totalTime;  // 单位：100纳秒
@@ -42,6 +48,7 @@ private:
     int m_cpuCores;
     // 日志
     std::shared_ptr<spdlog::logger> mylogger;
+    FILETIME m_prevIdleTime, m_prevKernelTime, m_prevUserTime;
 #endif
 
 };

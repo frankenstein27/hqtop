@@ -11,110 +11,106 @@
 #include <windows.h>
 #include <tlhelp32.h>
 #include <psapi.h>
+#include <wbemidl.h>
+#include <comdef.h>
+#include <QString>
 
 QList<ProcessInfo*> WindowsDataProvider::getProcessList()
 {
     QList<ProcessInfo*> processes;
     QSet<DWORD> currentPids;
 
+    // 绑定当前线程到第一个逻辑核心，确保 QPC 在一个核心上测量
+    HANDLE hThread = GetCurrentThread();
+    DWORD_PTR origAffinity = SetThreadAffinityMask(hThread, 1);
+
+    // 读取当前高精度时间
+    LARGE_INTEGER t2;
+    QueryPerformanceCounter(&t2);
+    double time2 = static_cast<double>(t2.QuadPart) / m_frequency.QuadPart;
+
     // 创建进程快照
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if(hSnapshot == INVALID_HANDLE_VALUE)
+    if (hSnapshot == INVALID_HANDLE_VALUE) {
+        SetThreadAffinityMask(hThread, origAffinity);
         return processes;
+    }
+
     PROCESSENTRY32 pe;
     pe.dwSize = sizeof(PROCESSENTRY32);
-    if (Process32First(hSnapshot, &pe))
-    {
-        LARGE_INTEGER now;
+    if (Process32First(hSnapshot, &pe)) {
         do {
-            WindowsProcessInfo *info = new WindowsProcessInfo();
             currentPids.insert(pe.th32ProcessID);
+            auto *info = new WindowsProcessInfo();
             info->setPid(pe.th32ProcessID);
             info->setName(QString::fromWCharArray(pe.szExeFile));
-            // 获取进程句柄（需要PROCESS_QUERY_INFORMATION权限）
-            // PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
-            HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_VM_READ, FALSE, pe.th32ProcessID);
-            if (hProcess)
-            {
-                // 获取执行文件
+
+            HANDLE hProcess = OpenProcess(
+                PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_VM_READ,
+                FALSE,
+                pe.th32ProcessID
+            );
+            if (hProcess) {
+                // 路径
                 WCHAR exePath[MAX_PATH];
-                if (GetModuleFileNameEx(hProcess, NULL, exePath, MAX_PATH))
-                {
+                if (GetModuleFileNameEx(hProcess, NULL, exePath, MAX_PATH)) {
                     info->setPath(QString::fromWCharArray(exePath));
                 }
-
+                // 内存
                 PROCESS_MEMORY_COUNTERS_EX pmc;
-                if(GetProcessMemoryInfo(hProcess,(PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc)))
-                {
-                    info->setMemoryUsage(pmc.PrivateUsage / (double)(1024 * 1024));
+                if (GetProcessMemoryInfo(hProcess, reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pmc), sizeof(pmc))) {
+                    info->setMemoryUsage(pmc.PrivateUsage / (1024.0 * 1024.0));
                 }
 
-                FILETIME createTime, exitTime, kernelTime, userTime;
-                if(GetProcessTimes(hProcess, &createTime, &exitTime, &kernelTime, &userTime))
-                {
-                    ULARGE_INTEGER kernel, user;
-                    kernel.LowPart = kernelTime.dwLowDateTime;
-                    kernel.HighPart = kernelTime.dwHighDateTime;
-                    user.LowPart = userTime.dwLowDateTime;
-                    user.HighPart = userTime.dwHighDateTime;
-
-                    ULONGLONG currentTotalTime = kernel.QuadPart + user.QuadPart;
-
-                    // 获取高精度时间戳
-                    QueryPerformanceCounter(&now);
-                    double currentTime = now.QuadPart / (double)m_frequency.QuadPart;
+                // CPU 时间
+                FILETIME ftCreate, ftExit, ftKernel, ftUser;
+                if (GetProcessTimes(hProcess, &ftCreate, &ftExit, &ftKernel, &ftUser)) {
+                    ULARGE_INTEGER ulKernel, ulUser;
+                    ulKernel.LowPart = ftKernel.dwLowDateTime;
+                    ulKernel.HighPart = ftKernel.dwHighDateTime;
+                    ulUser.LowPart = ftUser.dwLowDateTime;
+                    ulUser.HighPart = ftUser.dwHighDateTime;
+                    ULONGLONG totalTime = ulKernel.QuadPart + ulUser.QuadPart; // 单位：100ns
 
                     auto it = m_prevCpuUsage.find(pe.th32ProcessID);
-                    if (it != m_prevCpuUsage.end())
-                    {
-                        const CpuUsageData& prev = it->second;
-                        double timeDiff = currentTime - prev.timestamp;
-
-
-                        if (timeDiff > 0.4)
-                        {
-                            double cpuDiff = currentTotalTime - prev.totalTime;
-                            double wallSec = currentTime - prev.timestamp;
-                            // 计算 进程占总cpu利用率
-                            double usagePercent = ((cpuDiff / 1e7) / ( wallSec * m_cpuCores)) * 100.0;
-
-                            usagePercent = QString::number(usagePercent,'f',2).toDouble();
-                            info->setCpuUsage(usagePercent);
-                        } else
-                        {
+                    if (it != m_prevCpuUsage.end()) {
+                        const auto &prev = it->second;
+                        double deltaCpu = static_cast<double>(totalTime - prev.totalTime) * 1e-7; // 转为秒
+                        double deltaTime = time2 - prev.timestamp; // 秒
+                        if (deltaTime > 0.4) {
+                            // 按所有逻辑核归一化
+                            double usage = (deltaCpu / (deltaTime * m_cpuCores)) * 100.0;
+                            info->setCpuUsage(QString::number(usage, 'f', 2).toDouble());
+                        } else {
                             info->setCpuUsage(0.0);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         info->setCpuUsage(0.0);
                     }
-
-                    m_prevCpuUsage[pe.th32ProcessID] = { currentTotalTime, currentTime };
+                    m_prevCpuUsage[pe.th32ProcessID] = { totalTime, time2 };
                 }
                 CloseHandle(hProcess);
             }
-            // 判断是否为前台进程
+
+            // 前台状态
             HWND hForeground = GetForegroundWindow();
-            DWORD foregroundPid;
-            GetWindowThreadProcessId(hForeground, &foregroundPid);
-            info->setState((foregroundPid == pe.th32ProcessID));
+            DWORD fgPid = 0;
+            GetWindowThreadProcessId(hForeground, &fgPid);
+            info->setState((fgPid == pe.th32ProcessID));
             processes.append(info);
-            // winDebug()
         } while (Process32Next(hSnapshot, &pe));
     }
     CloseHandle(hSnapshot);
 
-    for (auto it = m_prevCpuUsage.begin(); it != m_prevCpuUsage.end();)
-    {
+    // 恢复线程亲和性
+    SetThreadAffinityMask(hThread, origAffinity);
+
+    // 移除已结束进程的历史记录
+    for (auto it = m_prevCpuUsage.begin(); it != m_prevCpuUsage.end(); ) {
         if (!currentPids.contains(it->first))
-        {
             it = m_prevCpuUsage.erase(it);
-        }
         else
-        {
             ++it;
-        }
     }
 
     return processes;
@@ -126,16 +122,51 @@ SystemResource* WindowsDataProvider::getSystemResource()
 {
 
     SystemResource *sRes = new SystemResource();
-//    sRes->setCpuTotal(20.01);
-//    sRes->setMemoryTotal(32);
-//    sRes->setMemoryUsed(14);
-//    sRes->setSwapTotal(20);
-//    sRes->setSwapUsed(7);
-//    sRes->setUpTime("21740");
 
 
+    // 1. 获取内存和交换空间信息
+    MEMORYSTATUSEX memStatus;
+    memStatus.dwLength = sizeof(memStatus);
+    if (GlobalMemoryStatusEx(&memStatus)) {
+        // 物理内存（单位：KB）
+        sRes->setMemoryTotal(static_cast<double>(memStatus.ullTotalPhys / 1024 / 1024 / 1024));
+        sRes->setMemoryUsed(static_cast<double>((memStatus.ullTotalPhys - memStatus.ullAvailPhys) / 1024 / 1024 / 1024));
 
-//    myDebug()
+        // 交换空间（页面文件）
+        sRes->setSwapTotal(static_cast<double>(memStatus.ullTotalPageFile / 1024 / 1024 / 1024));
+        sRes->setSwapUsed(static_cast<double>((memStatus.ullTotalPageFile - memStatus.ullAvailPageFile) / 1024 / 1024 / 1024));
+    }
+
+    // 2. 获取系统运行时间
+    ULONGLONG uptimeMs = GetTickCount();
+    double temp = uptimeMs / 1000.0;
+    QString res = formatTime(temp);
+    sRes->setUpTime(res);
+
+    // 3. 获取CPU利用率
+    FILETIME idleTime, kernelTime, userTime;
+    GetSystemTimes(&idleTime, &kernelTime, &userTime);
+
+    // 将FILETIME转换为64位整数
+    ULONGLONG idle = FileTimeToUInt64(idleTime) - FileTimeToUInt64(m_prevIdleTime);
+    ULONGLONG kernel = FileTimeToUInt64(kernelTime) - FileTimeToUInt64(m_prevKernelTime);
+    ULONGLONG user = FileTimeToUInt64(userTime) - FileTimeToUInt64(m_prevUserTime);
+
+    ULONGLONG total = kernel + user;  // 内核时间已包含空闲时间
+    ULONGLONG busy = total - idle;
+
+    double cpuUsage = 0.0;
+    if (total > 0) {
+        cpuUsage = (static_cast<double>(busy) / total) * 100.0;
+    }
+    sRes->setCpuTotal(cpuUsage);
+
+    // 更新前次时间值
+    m_prevIdleTime = idleTime;
+    m_prevKernelTime = kernelTime;
+    m_prevUserTime = userTime;
+
+
     return sRes;
 }
 
@@ -154,6 +185,33 @@ bool WindowsDataProvider::killProcess(qint64 pid)
     mylogger->info(log_str.toStdString());
     return true;
 }
+
+QString WindowsDataProvider::formatTime(double temp)
+{
+    int second = (int)temp++;
+    if(((int)temp*10) % 10 >=5)
+    {
+        second++;
+    }
+    int minInt = 60;
+    int hourInt = 3600;
+    int dayInt = 86400;
+
+    int day = second / dayInt;
+    int remaining = second % dayInt;
+
+    int hour = remaining / hourInt;
+    remaining %= hourInt;
+
+    int minutes = remaining / minInt;
+
+    int seconds = remaining % minInt;
+    return QString("%L1天 %2:%3:%4")
+            .arg(day)
+            .arg(hour, 2, 10, QLatin1Char('0'))
+            .arg(minutes, 2, 10, QLatin1Char('0'))
+            .arg(seconds, 2, 10, QLatin1Char('0'));
+}
 #endif
 
 WindowsDataProvider::WindowsDataProvider() :
@@ -161,6 +219,7 @@ WindowsDataProvider::WindowsDataProvider() :
 {
     m_cpuCores = this->getCpuCoresNumber();
     QueryPerformanceFrequency(&m_frequency);
+    GetSystemTimes(&m_prevIdleTime, &m_prevKernelTime, &m_prevUserTime);
     qDebug() << "cpu cores: " << m_cpuCores;
 }
 

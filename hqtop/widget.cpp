@@ -163,12 +163,13 @@ Widget::Widget(QWidget *parent)
     connect(this->settingWidget, &SettingWidget::logLevelChanged,
                     this->logger, &Logger::logLevelChangedHandle);
 
-
-    /*
-     *
-     */
     connect(this->settingWidget, &SettingWidget::themeChanged,
                     this, &Widget::loadTheme);
+
+    connect(this->settingWidget, &SettingWidget::CPUWarningValueChanged,
+                    this->myTableModel, &ProcessTableModel::handleCPUWarningValueChanged);
+    connect(this->settingWidget, &SettingWidget::MemWarningValueChanged,
+                    this->myTableModel, &ProcessTableModel::handleMemWarningValueChanged);
 
 
 

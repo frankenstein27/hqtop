@@ -45,7 +45,7 @@ QLineEdit, QComboBox {
 }
 
 QComboBox QAbstractItemView {
-    background-color: #a7e063;
+    background-color: #e1ecfa;
 }
 
 QComboBox::drop-down {
