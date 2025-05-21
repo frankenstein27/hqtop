@@ -48,14 +48,15 @@ Widget::Widget(QWidget *parent)
 
 
     this->setFixedSize(windowWidth, windowHeight);
-
+    QStringList strL;
 #ifdef Q_OS_WIN
-
-
-        this->dataprovider = new WindowsDataProvider();
+    strL << "Pid" << "Name" << "Path" << "State";
+    this->ui->FilterComboBox->addItems(strL);
+    this->dataprovider = new WindowsDataProvider();
 
 #elif defined(Q_OS_LINUX)
-
+    strL << "Pid" << "Name" << "User" << "State";
+    this->ui->FilterComboBox->addItems(strL);
     this->dataprovider = new LinuxDataProvider();
 
 #endif

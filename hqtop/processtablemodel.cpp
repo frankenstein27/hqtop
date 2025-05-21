@@ -32,6 +32,7 @@ ProcessTableModel::ProcessTableModel(Setting *setting,ProcessesManager
     changeColumn();
     QString tmp = this->m_setting->load<QString>("Sort/Name");
     this->m_sortedColumn = m_columnName.indexOf(tmp);
+    this->m_sortOrder = this->m_setting->load<Qt::SortOrder>("Sort/Order");
 
     this->CPUWarningValue = m_setting->load<double>("Warning Value/CPU");
     this->MemWarningValue = m_setting->load<int>("Warning Value/Mem");
@@ -54,6 +55,8 @@ ProcessTableModel::ProcessTableModel(Setting *setting,ProcessesManager
 
 ProcessTableModel::~ProcessTableModel()
 {
+    m_setting->save("Sort/Name", m_sortedColumn);
+    m_setting->save("Sort/Order", m_sortOrder);
     delete m_manager;
     m_sortThread->quit();
     m_sortThread->wait();
@@ -228,10 +231,11 @@ void ProcessTableModel::onFilterFinished(QList<ProcessInfo*> filteredProcesses)
 // 排序：因为不能直接在此类中开启子线程，所以在 sort 中调用 async 异步函数，异步函数中排序逻辑在子线程中完成
 void ProcessTableModel::sort(int column, Qt::SortOrder order)
 {
-    if(m_sortedColumn != column)
+    if(m_sortedColumn != column || m_sortOrder != order)
     {
         mylogger->debug("sort was triggered,sort factor: " + m_columnName[column].toStdString());
         m_setting->save("Sort/Name", m_columnName[column]);
+        m_setting->save("Sort/Order", order);
     }
 
     // 保存排序配置

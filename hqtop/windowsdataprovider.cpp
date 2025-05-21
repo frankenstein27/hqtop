@@ -158,9 +158,13 @@ SystemResource* WindowsDataProvider::getSystemResource()
     double cpuUsage = 0.0;
     if (total > 0) {
         cpuUsage = (static_cast<double>(busy) / total) * 100.0;
+        QString str = QString::number(cpuUsage, 'f', 2);
+        sRes->setCpuTotal(str.toDouble());
     }
-    sRes->setCpuTotal(cpuUsage);
-
+    else
+    {
+        sRes->setCpuTotal(cpuUsage);
+    }
     // 更新前次时间值
     m_prevIdleTime = idleTime;
     m_prevKernelTime = kernelTime;
@@ -181,9 +185,28 @@ qint64 WindowsDataProvider::getCpuCoresNumber()
 
 bool WindowsDataProvider::killProcess(qint64 pid)
 {
-    QString log_str = "process " + QString::number(pid) + " was killed.";
-    mylogger->info(log_str.toStdString());
-    return true;
+    DWORD dwPid = static_cast<DWORD>(pid);
+    HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, dwPid);
+    if(hProcess == nullptr)
+    {
+        QString log_str = "kill process(" + QString::number(pid) + ") failed.";
+        mylogger->info(log_str.toStdString());
+        return false;
+    }
+    BOOL result = TerminateProcess(hProcess, 0);
+    CloseHandle(hProcess);
+    if(result != FALSE)
+    {
+        QString log_str = "process " + QString::number(pid) + " was killed.";
+        mylogger->info(log_str.toStdString());
+        return true;
+    }
+    else
+    {
+        QString log_str = "kill process(" + QString::number(pid) + ") failed.";
+        mylogger->info(log_str.toStdString());
+        return false;
+    }
 }
 
 QString WindowsDataProvider::formatTime(double temp)
@@ -220,7 +243,6 @@ WindowsDataProvider::WindowsDataProvider() :
     m_cpuCores = this->getCpuCoresNumber();
     QueryPerformanceFrequency(&m_frequency);
     GetSystemTimes(&m_prevIdleTime, &m_prevKernelTime, &m_prevUserTime);
-    qDebug() << "cpu cores: " << m_cpuCores;
 }
 
 

@@ -6,8 +6,6 @@ SettingWidget::SettingWidget(Setting *setting, QWidget *parent) :
   , ui(new Ui::SettingWidget)
   , setting(setting)
   , m_curThemeMode("")
-  , m_newCPUValue(-1)
-  , m_newMemValue(-1)
   , m_newInterval_time(-1)
   , mylogger(spdlog::get("global_logger"))
 {
@@ -16,7 +14,10 @@ SettingWidget::SettingWidget(Setting *setting, QWidget *parent) :
     this->m_interval_time = this->setting->load<int>("Timer(ms)/interval time",1000);
     this->m_themeMode = this->setting->load<QString>("Theme/Name","Daytime");
     this->m_CPUValue = this->setting->load<double>("Warning Value/CPU");
+    this->m_newCPUValue = m_CPUValue;
     this->m_MemValue = this->setting->load<int>("Warning Value/Mem");
+    this->m_newMemValue = m_MemValue;
+
 
     this->m_curThemeMode = m_themeMode;
     if(m_themeMode == "Daytime")
@@ -35,8 +36,8 @@ SettingWidget::SettingWidget(Setting *setting, QWidget *parent) :
 
     ui->LogLevelComboBox->setCurrentText(m_logLevel);
     ui->DueDateComboBox->setCurrentText(QString::number(m_interval_time));
-    ui->CPUWariningComboBox->setCurrentText(QString::number(m_CPUValue));
-    ui->MemWarningComboBox->setCurrentText(QString::number(m_MemValue));
+    ui->CPUWariningComboBox->setCurrentText(QString::number(m_CPUValue) + "%");
+    ui->MemWarningComboBox->setCurrentText(QString::number(m_MemValue) + "MB");
     ui->applyPushButton->setEnabled(false);
 }
 
@@ -112,14 +113,14 @@ void SettingWidget::on_applyPushButton_clicked()
         this->setting->save("Warning Value/CPU", m_newCPUValue);
         emit CPUWarningValueChanged(m_newCPUValue);
         this->m_CPUValue = this->m_newCPUValue;
-        this->m_newCPUValue = -1;
+        ui->applyPushButton->setEnabled(false);
     }
     if(this->m_MemValue != this->m_newMemValue)
     {
-        this->setting->save("Warning Value/CPU", m_newMemValue);
-        emit CPUWarningValueChanged(m_newMemValue);
+        this->setting->save("Warning Value/Mem", m_newMemValue);
+        emit MemWarningValueChanged(m_newMemValue);
         this->m_MemValue = this->m_newMemValue;
-        this->m_newMemValue = -1;
+        ui->applyPushButton->setEnabled(false);
     }
 
     this->close();

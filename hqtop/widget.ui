@@ -132,28 +132,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="FilterComboBox">
-            <item>
-             <property name="text">
-              <string>pid</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>name</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>user</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>state</string>
-             </property>
-            </item>
-           </widget>
+           <widget class="QComboBox" name="FilterComboBox"/>
           </item>
           <item>
            <spacer name="horizontalSpacer_2">
