@@ -115,8 +115,12 @@ void ProcessesManager::handldProcessUpdate(QList<ProcessInfo*> processes)
         this->m_processes = deepCopyList(processes);
     }
 
-    qDeleteAll(processes);
-    processes.clear();
+    if(processes.size())
+    {
+        qDeleteAll(processes);
+        processes.clear();
+    }
+
     /* 此处没有问题，问题应该出现在后面的对列表处理的位置
     for(auto *winProc : m_processes)
     {

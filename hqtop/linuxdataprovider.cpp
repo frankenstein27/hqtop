@@ -46,8 +46,6 @@ QList<ProcessInfo*> LinuxDataProvider::getProcessList()
     // 调用函数 获取当前进程目录名
     this->getAllProcess();
 
-    // 遍历每个进程 获取ProcessInfo
-    LinuxProcessInfo* processinfo = new LinuxProcessInfo();
     QString path;
     int pid;
     QFile file;
@@ -57,6 +55,8 @@ QList<ProcessInfo*> LinuxDataProvider::getProcessList()
 
     for(int i = 0; i < processNum; ++i)
     {
+        // 遍历每个进程 获取ProcessInfo
+        LinuxProcessInfo* processinfo = new LinuxProcessInfo();
         currentTime = 0;
         pid = this->processIDs->at(i);
         QString basePath = "/proc/" + QString::number(pid);

@@ -235,14 +235,43 @@ QString WindowsDataProvider::formatTime(double temp)
             .arg(minutes, 2, 10, QLatin1Char('0'))
             .arg(seconds, 2, 10, QLatin1Char('0'));
 }
+#elif defined(Q_OS_LINUX)
+QList<ProcessInfo*> WindowsDataProvider::getProcessList()
+{
+
+}
+
+SystemResource* WindowsDataProvider::getSystemResource()
+{
+
+}
+
+qint64 WindowsDataProvider::getCpuCoresNumber()
+{
+    return 1;
+}
+
+bool WindowsDataProvider::killProcess(qint64 pid)
+{
+
+}
+
+QString WindowsDataProvider::formatTime(double temp)
+{
+
+}
 #endif
+
+
 
 WindowsDataProvider::WindowsDataProvider() :
     mylogger(spdlog::get("global_logger"))
 {
     m_cpuCores = this->getCpuCoresNumber();
+#ifdef Q_OS_WIN
     QueryPerformanceFrequency(&m_frequency);
     GetSystemTimes(&m_prevIdleTime, &m_prevKernelTime, &m_prevUserTime);
+#endif
 }
 
 

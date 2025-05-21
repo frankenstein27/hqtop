@@ -32,9 +32,8 @@ public:
 
         return Platform::Windows;
 
-#elif def Q_OS_LINUX
-
-        return Platform::Linux
+#elif defined(Q_OS_LINUX)
+        return Platform::Linux;
 #endif
     };
 

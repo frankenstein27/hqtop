@@ -258,6 +258,12 @@ void ProcessTableModel::requestAsyncSort(int column, Qt::SortOrder order)
     }
 
     // 启动 m_processesDisposeWorker 进行排序，参数含义：启动哪一个子线程，其中的哪个函数，参数1（类型，名）,参数2......
+#ifdef Q_OS_LINUX
+    if(order == Qt::SortOrder::AscendingOrder)
+        order = Qt::SortOrder::DescendingOrder;
+    else
+        order = Qt::SortOrder::AscendingOrder;
+#endif
     QMetaObject::invokeMethod(this->m_processesDisposeWorker, "sortProcesses",
                               Q_ARG(QList<ProcessInfo*>, processWaitSort),
                               Q_ARG(int, column),
