@@ -40,14 +40,12 @@ LinuxDataProvider& LinuxDataProvider::operator=(const LinuxDataProvider &other)
 }
 
 // 获取进程列表
-QList<ProcessInfo> LinuxDataProvider::getProcessList()
+QList<ProcessInfo*> LinuxDataProvider::getProcessList()
 {
-    QList<ProcessInfo> processesInfo;
+    QList<ProcessInfo*> processesInfo;
     // 调用函数 获取当前进程目录名
     this->getAllProcess();
 
-    // 遍历每个进程 获取ProcessInfo
-    ProcessInfo processinfo;
     QString path;
     int pid;
     QFile file;
@@ -57,6 +55,8 @@ QList<ProcessInfo> LinuxDataProvider::getProcessList()
 
     for(int i = 0; i < processNum; ++i)
     {
+        // 遍历每个进程 获取ProcessInfo
+        LinuxProcessInfo* processinfo = new LinuxProcessInfo();
         currentTime = 0;
         pid = this->processIDs->at(i);
         QString basePath = "/proc/" + QString::number(pid);
@@ -81,7 +81,7 @@ QList<ProcessInfo> LinuxDataProvider::getProcessList()
                         QStringList sUserId = lineMsg.mid(5).split('\t');
                         qint64 iUserId = sUserId[0].toInt();
                         QString userName = this->userIdMap.value(iUserId);
-                        processinfo.setUser(userName);
+                        processinfo->setUser(userName);
                     }
                 }
             }
@@ -99,10 +99,10 @@ QList<ProcessInfo> LinuxDataProvider::getProcessList()
             QTextStream in(&file);
             QString msg = in.readAll();
             QStringList msgList = msg.split(' ');
-            processinfo.setPid(msgList[0].toInt());                                             // pid
-            processinfo.setName(msgList[1].remove('(').remove(')'));                            // name
-            processinfo.setMemoryUsage(msgList[23].toInt() * this->m_KernelPageSize / 1024);    // memory
-            processinfo.setState(msgList[2]);                                                   // state
+            processinfo->setPid(msgList[0].toInt());                                             // pid
+            processinfo->setName(msgList[1].remove('(').remove(')'));                            // name
+            processinfo->setMemoryUsage(msgList[23].toInt() * this->m_KernelPageSize / 1024);    // memory
+            processinfo->setState(msgList[2]);                                                   // state
             // cpu 占用率（百分比） --- 两次采样---
             currentTime = msgList[13].toDouble() +
                     msgList[14].toDouble() +
@@ -114,11 +114,11 @@ QList<ProcessInfo> LinuxDataProvider::getProcessList()
                 double processCpuTime = currentTime - prevTime;
                 double usage = (processCpuTime / m_diffCpuTime) * 100;
                 usage = QString::number(usage,'f',2).toDouble();
-                processinfo.setCpuUsage(usage);
+                processinfo->setCpuUsage(usage);
             }
             else
             {
-                processinfo.setCpuUsage(0.00);
+                processinfo->setCpuUsage(0.00);
             }
             m_prevProcCpuTime[pid] = currentTime;
             file.close();
@@ -327,7 +327,7 @@ void LinuxDataProvider::getKernelPageSize()
 }
 
 // 获取 cpu 核心数量
-qint64 LinuxDataProvider::getCpuNum()
+qint64 LinuxDataProvider::getCpuCoresNumber()
 {
     if(this->cpuNum)
         return this->cpuNum;

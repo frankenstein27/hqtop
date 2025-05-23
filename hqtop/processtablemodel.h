@@ -5,17 +5,18 @@
 #include <QVariant>
 #include <QModelIndex>
 
-#include "processmanager.h"
+#include "processesmanager.h"
 #include "processesdisposeworker.h"
 #include "logger.h"
 
+class ProcessesManager;
 
 class ProcessTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 
 public:
-    ProcessTableModel(Setting *setting,ProcessManager *processmanager,QObject *parent);
+    ProcessTableModel(Setting *setting,ProcessesManager *processmanager,QObject *parent);
     ~ProcessTableModel();
 
     // 行数
@@ -42,13 +43,17 @@ public slots:
     // 删除按钮被按下
     void onDeletePushButtonClicked();
 
+    void handleCPUWarningValueChanged(double newValue);
+
+    void handleMemWarningValueChanged(int newValue);
+
 private slots:
     // 进程数据更新 信号由 processmanager 发来
-    void onProcessesUpdate(QList<ProcessInfo> processes);
+    void onProcessesUpdate();
     // 排序完成
-    void onSortFinished(QList<ProcessInfo> sortedProcesses,int column);
+    void onSortFinished(QList<ProcessInfo*> sortedProcesses,int column);
     // 过滤完成
-    void onFilterFinished(QList<ProcessInfo> filteredProcesses);
+    void onFilterFinished(QList<ProcessInfo*> filteredProcesses);
 
 
 signals:
@@ -63,11 +68,27 @@ private:
     // 异步过滤函数 在 applyFilter 函数中调用
     void asyncFilter();
 
-    ProcessManager *manager;
-    // 缓存原始数据（下层传递来的数据）
-    QList<ProcessInfo> m_originalProcesses;
+    ProcessesManager *m_manager;
+    QList<ProcessInfo*> m_originalProcesses;
     // 缓存过滤、排序之后进程数据（真正要现实的数据）
-    QList<ProcessInfo> m_processes;
+    QList<ProcessInfo*> m_processes;
+    QList<ProcessInfo*> m_processWaitFilter;
+    QList<ProcessInfo*> m_newProcesses;
+
+/*
+#ifdef  Q_OS_WIN
+    // 缓存原始数据（下层传递来的数据）
+    QList<WindowsProcessInfo*> m_originalProcesses;
+    // 缓存过滤、排序之后进程数据（真正要现实的数据）
+    QList<WindowsProcessInfo*> m_processes;
+
+#elif def Q_OS_LINUX
+    // 缓存原始数据（下层传递来的数据）
+    QList<LinuxProcessInfo*> m_originalProcesses;
+    // 缓存过滤、排序之后进程数据（真正要现实的数据）
+    QList<LinuxProcessInfo*> m_processes;
+#endif
+*/
 
     // 用于保存排序状态（当前按...字段排序、升/降序）
     int m_sortedColumn;
@@ -90,6 +111,11 @@ private:
     QVector<QString> m_columnName;
     // 设置
     Setting *m_setting;
+    // 是否第一次获取进程信息
+    bool m_firstGetInfo;
+    QMutex m_mutex;
+    double CPUWarningValue;
+    int MemWarningValue;
 };
 
 #endif // PROCESSTABLEMODEL_H

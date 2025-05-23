@@ -55,7 +55,6 @@ public:
     QString getUpTime() const;
     void setUpTime(QString upTime);
 
-    // toJson() 方法供日志模块使用 后续补充
 signals:
 
 
@@ -71,7 +70,7 @@ private:
 
 };
 
-Q_DECLARE_METATYPE(SystemResource);
+Q_DECLARE_METATYPE(SystemResource)
 
 
 #endif // SYSTEMRESOURCE_H

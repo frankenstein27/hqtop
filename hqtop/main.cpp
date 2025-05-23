@@ -11,10 +11,8 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     Widget w;
 
-    qRegisterMetaType<QList<ProcessInfo>>("QList<ProcessInfo>");
-    qRegisterMetaType<SystemResource>("SystemResource");
 
-    qRegisterMetaType<Qt::SortOrder>("Qt::SortOrder");
+
 
     w.show();
     return a.exec();

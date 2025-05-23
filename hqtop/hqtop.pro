@@ -1,10 +1,14 @@
 RESOURCES += resources.qrc
 
-QT       += core gui charts
+QT       += core gui charts xml
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
+
+#for Debug
+#QMAKE_CXXFLAGS += -fsanitize=address
+#QMAKE_LFLAGS += -fsanitize=address
 
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
@@ -20,11 +24,12 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     datacollector.cpp \
     linuxdataprovider.cpp \
+    linuxprocessinfo.cpp \
     logger.cpp \
     main.cpp \
     processesdisposeworker.cpp \
+    processesmanager.cpp \
     processinfo.cpp \
-    processmanager.cpp \
     processtablemodel.cpp \
     resourceanalyzer.cpp \
     resourcewidget.cpp \
@@ -32,15 +37,18 @@ SOURCES += \
     settingwidget.cpp \
     systemdataprovider.cpp \
     systemresource.cpp \
-    widget.cpp
+    widget.cpp \
+    windowsdataprovider.cpp \
+    windowsprocessinfo.cpp
 
 HEADERS += \
     datacollector.h \
     linuxdataprovider.h \
+    linuxprocessinfo.h \
     logger.h \
     processesdisposeworker.h \
+    processesmanager.h \
     processinfo.h \
-    processmanager.h \
     processtablemodel.h \
     resourceanalyzer.h \
     resourcewidget.h \
@@ -48,7 +56,9 @@ HEADERS += \
     settingwidget.h \
     systemdataprovider.h \
     systemresource.h \
-    widget.h
+    widget.h \
+    windowsdataprovider.h \
+    windowsprocessinfo.h
 
 FORMS += \
     resourcewidget.ui \
@@ -66,3 +76,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 DISTFILES +=
+
+win32 {
+    LIBS += -lpsapi -ladvapi32
+    DEFINES += WIN32_LEAN_AND_MEAN
+}

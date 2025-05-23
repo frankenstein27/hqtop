@@ -1,6 +1,8 @@
 #include "widget.h"
 #include "ui_widget.h"
 
+#define myDebug() qDebug()<< "file: " << __FILE__ << "line: " << __LINE__ << "function: " << __FUNCTION__;
+
 
 /* 本类涉及到的多为与 UI 有关操作，因此无法在子线程中运行，封装的底层函数直接调用即可完成程序功能
  *
@@ -10,6 +12,16 @@ Widget::Widget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::Widget)
 {
+    qRegisterMetaType<ProcessInfo*>("ProcessInfo*");
+    qRegisterMetaType<WindowsProcessInfo*>("WindowsProcessInfo*");
+    qRegisterMetaType<LinuxProcessInfo*>("LinuxProcessInfo*");
+    qRegisterMetaType<QList<ProcessInfo*>>("QList<ProcessInfo*>");
+    qRegisterMetaType<QList<WindowsProcessInfo*>>("QList<WindowsProcessInfo*>");
+    qRegisterMetaType<QList<LinuxProcessInfo*>>("QList<LinuxProcessInfo*>");
+    qRegisterMetaType<SystemResource>("SystemResource");
+    qRegisterMetaType<Qt::SortOrder>("Qt::SortOrder");
+
+
     ui->setupUi(this);
 
     // 启用 tableView 排序功能
@@ -36,16 +48,27 @@ Widget::Widget(QWidget *parent)
 
 
     this->setFixedSize(windowWidth, windowHeight);
+    QStringList strL;
+#ifdef Q_OS_WIN
+    strL << "Pid" << "Name" << "Path" << "State";
+    this->ui->FilterComboBox->addItems(strL);
+    this->dataprovider = new WindowsDataProvider();
 
-
+#elif defined(Q_OS_LINUX)
+    strL << "Pid" << "Name" << "User" << "State";
+    this->ui->FilterComboBox->addItems(strL);
     this->dataprovider = new LinuxDataProvider();
+
+#endif
+
+
+
     this->dataCollector = new DataCollector(this->dataprovider);
-    this->processmanager = new ProcessManager();
+    this->processmanager = new ProcessesManager();
     this->resourceanalyzer = new ResourceAnalyzer();
-    this->myTableModel = new ProcessTableModel(setting, this->processmanager, ui->processesTableView);
+    this->myTableModel = new ProcessTableModel(this->setting, this->processmanager, ui->processesTableView);
     this->resourceWidget = new ResourceWidget(this->resourceanalyzer);
     this->settingWidget = new SettingWidget(setting);
-
 
     // 启动程序即开始收集数据
 
@@ -54,7 +77,7 @@ Widget::Widget(QWidget *parent)
      * 由于 dataCollector 整个对象都被移至子线程中，所以此信号也由子线程发出
      */
     connect(this->dataCollector, &DataCollector::updateProcesses, this->processmanager,
-                    &ProcessManager::handldProcessUpdate);
+                    &ProcessesManager::handldProcessUpdate,Qt::QueuedConnection);
 
     /* 2.收集进程和系统资源
      * 若切换到进程页面（默认为此页面），收集进程和系统资源信息
@@ -106,8 +129,16 @@ Widget::Widget(QWidget *parent)
 
     /* 6.3.processmanager 的杀死进程信号发出 由 LinuxDataProvider的killProcess 接收
      */
-    connect(this->processmanager, &ProcessManager::killProcessSignal,
+//#ifdef Q_OS_WIN
+//    connect(this->processmanager, &ProcessesManager::killProcessSignal,
+//                    this->dataprovider, &WindowsDataProvider::killProcess);
+//#elif defined (Q_OS_LINUX)
+//    connect(this->processmanager, &ProcessesManager::killProcessSignal,
+//                    this->dataprovider, &LinuxDataProvider::killProcess);
+//#endif
+    connect(this->processmanager, &ProcessesManager::killProcessSignal,
                     this->dataprovider, &SystemDataProvider::killProcess);
+
 
     /* 7.进程页和资源页相互切换，同时控制相关底层函数调用，节约性能
      * 7.1.在进程页点击资源页按钮 发出 processesPageHide 信号（取消调用进程更新函数，但不取消调用系统更新函数）
@@ -133,17 +164,24 @@ Widget::Widget(QWidget *parent)
     connect(this->settingWidget, &SettingWidget::logLevelChanged,
                     this->logger, &Logger::logLevelChangedHandle);
 
-
-    /*
-     *
-     */
     connect(this->settingWidget, &SettingWidget::themeChanged,
                     this, &Widget::loadTheme);
 
+    connect(this->settingWidget, &SettingWidget::CPUWarningValueChanged,
+                    this->myTableModel, &ProcessTableModel::handleCPUWarningValueChanged);
+    connect(this->settingWidget, &SettingWidget::MemWarningValueChanged,
+                    this->myTableModel, &ProcessTableModel::handleMemWarningValueChanged);
+
+
+
     int interval_time = setting->load<int>("Timer(ms)/interval time");
 
+    if(!interval_time)
+        interval_time = 1000;
     // 启动收集者 指定时间间隔为 interval_time
     dataCollector->startCollection(interval_time);
+
+
 
     // 将 TableView 的内容显示出来
     ui->processesTableView->setModel(this->myTableModel);
@@ -166,15 +204,18 @@ void Widget::onProcessesNumberChanged(qint64 processesNumber)
 
 Widget::~Widget()
 {
-    delete ui;
+    delete settingWidget;
     delete resourceWidget;
     delete myTableModel;
-    delete resourceanalyzer;
-    delete processmanager;
+
+//    delete processmanager;   在销毁 ProcessTableModel 时，已经将其销毁（ProcessTableModel的析构函数）
+//    delete resourceanalyzer; 在销毁 resourceWidget 时，已经将其销毁（resourceWidget的析构函数 ）
     delete dataCollector;
     delete dataprovider;
     logger->shutdown_logger();
     delete logger;
+    delete setting;
+    delete ui;
 }
 
 void Widget::onProcessesPageShow()

@@ -15,20 +15,21 @@
 // 实现 Linux 平台 获取相关数据
 class LinuxDataProvider : public SystemDataProvider
 {
+    Q_OBJECT
 public:
     LinuxDataProvider();
     ~LinuxDataProvider();
     LinuxDataProvider(const LinuxDataProvider& other);
     LinuxDataProvider& operator=(const LinuxDataProvider &other);
 
-    QList<ProcessInfo> getProcessList() override;
+    QList<ProcessInfo*> getProcessList() override;
     SystemResource* getSystemResource() override;
+
+    qint64 getCpuCoresNumber() override;
+    qint64 cpuNum = 0;
 
 public slots:
     bool killProcess(qint64 pid) override;
-
-    qint64 getCpuNum();
-    qint64 cpuNum = 0;
 
 private:
     void getAllProcess();
@@ -37,7 +38,7 @@ private:
 
 private:
     // 获取页面大小
-    void getKernelPageSize() override;
+    void getKernelPageSize();
     // 获取 用户ID和用户名 的映射
     void getUserIdMap();
 
@@ -48,7 +49,7 @@ private:
 
     QList<qint64> *processIDs;
     QMap<qint64,double> m_prevProcCpuTime;
-    double m_prevTotalCpu,m_prevIdleCpu,m_diffCpuTime;;
+    double m_prevTotalCpu,m_prevIdleCpu,m_diffCpuTime;
 
     // 页面大小 KB
     short m_KernelPageSize;

@@ -10,7 +10,8 @@
 #include "resourcewidget.h"
 #include "systemdataprovider.h"
 #include "linuxdataprovider.h"
-#include "processmanager.h"
+#include "windowsdataprovider.h"
+#include "processesmanager.h"
 #include "resourceanalyzer.h"
 #include "processtablemodel.h"
 #include "logger.h"
@@ -57,7 +58,7 @@ private:
     // 数据采集层
     DataCollector *dataCollector;
     // 业务逻辑层
-    ProcessManager *processmanager;
+    ProcessesManager *processmanager;
     ResourceAnalyzer *resourceanalyzer;
     // UI显示层
     ProcessTableModel *myTableModel;

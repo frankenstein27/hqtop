@@ -13,6 +13,12 @@ SettingWidget::SettingWidget(Setting *setting, QWidget *parent) :
     this->m_logLevel = this->setting->load<QString>("Log/Level","debug");
     this->m_interval_time = this->setting->load<int>("Timer(ms)/interval time",1000);
     this->m_themeMode = this->setting->load<QString>("Theme/Name","Daytime");
+    this->m_CPUValue = this->setting->load<double>("Warning Value/CPU");
+    this->m_newCPUValue = m_CPUValue;
+    this->m_MemValue = this->setting->load<int>("Warning Value/Mem");
+    this->m_newMemValue = m_MemValue;
+
+
     this->m_curThemeMode = m_themeMode;
     if(m_themeMode == "Daytime")
     {
@@ -30,6 +36,8 @@ SettingWidget::SettingWidget(Setting *setting, QWidget *parent) :
 
     ui->LogLevelComboBox->setCurrentText(m_logLevel);
     ui->DueDateComboBox->setCurrentText(QString::number(m_interval_time));
+    ui->CPUWariningComboBox->setCurrentText(QString::number(m_CPUValue) + "%");
+    ui->MemWarningComboBox->setCurrentText(QString::number(m_MemValue) + "MB");
     ui->applyPushButton->setEnabled(false);
 }
 
@@ -100,6 +108,21 @@ void SettingWidget::on_applyPushButton_clicked()
 
         ui->applyPushButton->setEnabled(false);
     }
+    if(this->m_CPUValue != this->m_newCPUValue)
+    {
+        this->setting->save("Warning Value/CPU", m_newCPUValue);
+        emit CPUWarningValueChanged(m_newCPUValue);
+        this->m_CPUValue = this->m_newCPUValue;
+        ui->applyPushButton->setEnabled(false);
+    }
+    if(this->m_MemValue != this->m_newMemValue)
+    {
+        this->setting->save("Warning Value/Mem", m_newMemValue);
+        emit MemWarningValueChanged(m_newMemValue);
+        this->m_MemValue = this->m_newMemValue;
+        ui->applyPushButton->setEnabled(false);
+    }
+
     this->close();
 }
 
@@ -107,7 +130,9 @@ void SettingWidget::on_cancelPushButton_clicked()
 {
     if(this->m_newLogLevel.size() ||
             this->m_themeMode != this->m_curThemeMode ||
-            -1 != m_newInterval_time
+            -1 != m_newInterval_time ||
+            this->m_CPUValue != this->m_newCPUValue ||
+            this->m_MemValue != this->m_newMemValue
             )
     {
         QMessageBox::StandardButton result = QMessageBox::warning(nullptr, "exit",
@@ -141,4 +166,30 @@ void SettingWidget::on_NightModeRadioButton_toggled(bool checked)
         this->m_newThemeMode = "Nighttime";
         ui->applyPushButton->setEnabled(true);
     }
+}
+
+void SettingWidget::on_CPUWariningComboBox_currentTextChanged(const QString &arg1)
+{
+    int startIndex = arg1.indexOf("%");
+    QString res = arg1;
+    res.remove(startIndex,1);
+    this->m_newCPUValue = res.toDouble();
+
+    if(this->m_newCPUValue != m_CPUValue)
+        ui->applyPushButton->setEnabled(true);
+    else
+        ui->applyPushButton->setEnabled(false);
+}
+
+void SettingWidget::on_MemWarningComboBox_currentTextChanged(const QString &arg1)
+{
+    int startIndex = arg1.indexOf("MB");
+    QString res = arg1;
+    res.remove(startIndex,2);
+    this->m_newMemValue = res.toInt();
+
+    if(m_newMemValue != m_MemValue)
+        ui->applyPushButton->setEnabled(true);
+    else
+        ui->applyPushButton->setEnabled(false);
 }
