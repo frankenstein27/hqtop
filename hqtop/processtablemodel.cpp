@@ -15,7 +15,7 @@ ProcessTableModel::ProcessTableModel(Setting *setting,ProcessesManager
     , m_sortedColumn(-1)
     , m_sortOrder(Qt::AscendingOrder)
     , m_isMsgBox(false)
-    , m_filterFactor("pid")
+    , m_filterFactor("Pid")
     , m_filterText("")
     , m_checkedProcess(-1)
     , mylogger(spdlog::get("global_logger"))
@@ -37,6 +37,9 @@ ProcessTableModel::ProcessTableModel(Setting *setting,ProcessesManager
     this->CPUWarningValue = m_setting->load<double>("Warning Value/CPU");
     this->MemWarningValue = m_setting->load<int>("Warning Value/Mem");
 
+
+
+    /*
     // 初始化线程和排序工作函数
     this->m_sortThread = new QThread(this);
     this->m_processesDisposeWorker = new ProcessesDisposeWorker();
@@ -51,6 +54,15 @@ ProcessTableModel::ProcessTableModel(Setting *setting,ProcessesManager
     // 关联：过滤完成信号（来自ProcessesDisposeWorker），由 onFilterFinished 处理
     connect(this->m_processesDisposeWorker, &ProcessesDisposeWorker::filtFinished,
                 this, &ProcessTableModel::onFilterFinished);
+    */
+
+    connect(this->m_manager, &ProcessesManager::sortFinished,
+                this, &ProcessTableModel::onSortFinished);
+
+    // 关联：过滤完成信号（来自ProcessesDisposeWorker），由 onFilterFinished 处理
+    connect(this->m_manager, &ProcessesManager::filtFinished,
+                this, &ProcessTableModel::onFilterFinished);
+
 }
 
 ProcessTableModel::~ProcessTableModel()
@@ -58,13 +70,12 @@ ProcessTableModel::~ProcessTableModel()
     m_setting->save("Sort/Name", m_sortedColumn);
     m_setting->save("Sort/Order", m_sortOrder);
     delete m_manager;
-    m_sortThread->quit();
-    m_sortThread->wait();
+//    m_sortThread->quit();
+//    m_sortThread->wait();
     qDeleteAll(m_processes);
     m_processes.clear();
     qDeleteAll(m_originalProcesses);
     m_originalProcesses.clear();
-    delete m_processesDisposeWorker;
 }
 
 
@@ -203,7 +214,8 @@ void ProcessTableModel::asyncFilter()
         m_processWaitFilter = m_manager->deepCopyList(m_originalProcesses);
     }
 
-    QMetaObject::invokeMethod(this->m_processesDisposeWorker, "filterProcesses",
+
+    QMetaObject::invokeMethod(this->m_manager, "filterProcesses",
                               Q_ARG(QList<ProcessInfo*>, m_processWaitFilter),
                               Q_ARG(QString, this->m_filterFactor),
                               Q_ARG(QString, this->m_filterText));
@@ -264,11 +276,14 @@ void ProcessTableModel::requestAsyncSort(int column, Qt::SortOrder order)
     else
         order = Qt::SortOrder::AscendingOrder;
 #endif
-    QMetaObject::invokeMethod(this->m_processesDisposeWorker, "sortProcesses",
+
+
+    QMetaObject::invokeMethod(this->m_manager, "sortProcesses",
                               Q_ARG(QList<ProcessInfo*>, processWaitSort),
                               Q_ARG(int, column),
                               Q_ARG(bool, m_isMsgBox),
                               Q_ARG(Qt::SortOrder, order));
+
 }
 
 

@@ -27,7 +27,6 @@ SOURCES += \
     linuxprocessinfo.cpp \
     logger.cpp \
     main.cpp \
-    processesdisposeworker.cpp \
     processesmanager.cpp \
     processinfo.cpp \
     processtablemodel.cpp \
@@ -46,7 +45,6 @@ HEADERS += \
     linuxdataprovider.h \
     linuxprocessinfo.h \
     logger.h \
-    processesdisposeworker.h \
     processesmanager.h \
     processinfo.h \
     processtablemodel.h \

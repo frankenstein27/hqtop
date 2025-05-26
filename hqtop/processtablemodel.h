@@ -6,7 +6,6 @@
 #include <QModelIndex>
 
 #include "processesmanager.h"
-#include "processesdisposeworker.h"
 #include "logger.h"
 
 class ProcessesManager;
@@ -99,8 +98,6 @@ private:
     QString m_filterFactor;
     // 筛选内容
     QString m_filterText;
-    // 排序工作类
-    ProcessesDisposeWorker *m_processesDisposeWorker;
     // 子线程对象
     QThread *m_sortThread;
     // 选中的线程

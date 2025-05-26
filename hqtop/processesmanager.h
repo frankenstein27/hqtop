@@ -7,6 +7,8 @@
 #include <QThread>
 #include <QMutex>
 
+#include <spdlog/spdlog.h>
+
 #include "linuxprocessinfo.h"
 #include "windowsprocessinfo.h"
 #include "processtablemodel.h"
@@ -15,6 +17,14 @@
 class ProcessesManager : public QObject
 {
     Q_OBJECT
+
+public slots:
+    void filterProcesses(QList<ProcessInfo*> processesWaitFilter,QString filterFactor,QString filterText);
+    void sortProcesses(QList<ProcessInfo*> processesWaitSort,int column,bool isMsgBox,
+                       Qt::SortOrder order = Qt::AscendingOrder);
+signals:
+    void sortFinished(QList<ProcessInfo*> sortedProcesses,bool isMsgBox,int column);
+    void filtFinished(QList<ProcessInfo*> filteredProcesses);
 
 public:
     ProcessesManager();
@@ -46,6 +56,7 @@ private:
     QThread m_workerThread;
 //    QList<ProcessTableModel::ProcessEntry> m_processes;
     QMutex m_mutex;
+    std::shared_ptr<spdlog::logger> mylogger;
 };
 
 #endif // PROCESSMANAGER_H
