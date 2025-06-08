@@ -129,6 +129,16 @@ void ResourceWidget::handleSysResourceUpdateSysResPage(SystemResource newSystemR
 
 void ResourceWidget::updateGraphHistory()
 {
+    if(this->cpuHistory.size() >= m_sysResourceSize)
+    {
+        this->cpuHistory.pop_front();
+        this->memoryHistory.pop_front();
+        if(!isWarn)
+        {
+            mylogger->trace("cpu history and memory history exceeded the limit. exec pop_front...");
+            isWarn = true;
+        }
+    }
     this->cpuHistory.enqueue(m_sysResource.getCpuTotal());
     this->memoryHistory.enqueue(m_sysResource.getMemoryUsed());
     if(!(this->memoryTotal > 0))
@@ -136,25 +146,24 @@ void ResourceWidget::updateGraphHistory()
         this->memoryTotal = m_sysResource.getMemoryTotal();
         memoryAxisY->setRange(0, this->memoryTotal);
     }
-    if(this->cpuHistory.size() >= m_sysResourceSize)
-    {
-        if(!isWarn)
-        {
-            mylogger->trace("cpu history and memory history exceeded the limit. exec pop_front...");
-            isWarn = true;
-        }
-        this->cpuHistory.pop_front();
-        this->memoryHistory.pop_front();
-    }
+
     cpuSeries->clear();
-    for(int i = 0; i < cpuHistory.size(); ++i)
-    {
-        cpuSeries->append(i, cpuHistory.at(i));
+    int startIdx = std::max(0, cpuHistory.size() - m_sysResourceSize);
+    for (int i = 0; i < cpuHistory.size(); ++i) {
+        // x坐标基于窗口位置：0 ~ (m_sysResourceSize-1)
+        cpuSeries->append(i - startIdx, cpuHistory.at(i));
     }
+
+//    for(int i = 0; i < cpuHistory.size(); ++i)
+//    {
+//        cpuSeries->append(i, cpuHistory.at(i));
+//    }
     memorySeries->clear();
+
+    startIdx = std::max(0,memoryHistory.size() - m_sysResourceSize);
     for(int i = 0; i < memoryHistory.size(); ++i)
     {
-        memorySeries->append(i, memoryHistory.at(i));
+        memorySeries->append(i - startIdx, memoryHistory.at(i));
     }
 }
 
