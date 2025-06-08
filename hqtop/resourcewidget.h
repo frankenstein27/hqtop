@@ -11,12 +11,10 @@
 
 #include "resourceanalyzer.h"
 #include "systemresource.h"
+#include "setting.h"
 
 // 引入 QChartView 还不够，还需引入 QChart 的命名空间
 QT_CHARTS_USE_NAMESPACE
-
-
-#define SYSRESOUCE_SZ 60
 
 
 namespace Ui {
@@ -73,6 +71,8 @@ private:
     // 日志
     std::shared_ptr<spdlog::logger> mylogger;
     bool isWarn;
+    short m_sysResourceSize;
+    Setting *m_setting;
 };
 
 #endif // RESOURCEWIDGET_H

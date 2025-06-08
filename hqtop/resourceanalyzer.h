@@ -6,8 +6,6 @@
 #include "systemresource.h"
 
 
-#define SYSRESOUCE_SZ 60
-
 // 系统总量分析 类
 class ResourceAnalyzer : public QObject
 {

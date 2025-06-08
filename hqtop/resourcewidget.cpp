@@ -14,8 +14,13 @@ ResourceWidget::ResourceWidget(ResourceAnalyzer *resourceanalyzer,QWidget *paren
   , memoryTotal(-1)
   , mylogger(spdlog::get("global_logger"))
   , isWarn(false)
+  , m_sysResourceSize(60)
 {
     ui->setupUi(this);
+    this->m_setting = new Setting();
+
+    int interval = m_setting->load<int>("Timer(ms)/interval time");
+    m_sysResourceSize = 1000 * 60 / interval;
 
     QPalette resPal(this->palette());
     this->setAutoFillBackground(true);
@@ -33,7 +38,7 @@ ResourceWidget::ResourceWidget(ResourceAnalyzer *resourceanalyzer,QWidget *paren
 
         // 坐标轴配置
         cpuAxisX = new QValueAxis();
-        cpuAxisX->setRange(0, SYSRESOUCE_SZ);
+        cpuAxisX->setRange(0, m_sysResourceSize);
         cpuAxisX->setLabelFormat("%d");
         cpuAxisX->setTitleText("Time");
 
@@ -67,7 +72,7 @@ ResourceWidget::ResourceWidget(ResourceAnalyzer *resourceanalyzer,QWidget *paren
         memorySeries = new QLineSeries();
 
         memoryAxisX = new QValueAxis();
-        memoryAxisX->setRange(0, SYSRESOUCE_SZ);
+        memoryAxisX->setRange(0, m_sysResourceSize);
         memoryAxisX->setLabelFormat("%d");
         memoryAxisX->setTitleText("Time");
 
@@ -131,11 +136,11 @@ void ResourceWidget::updateGraphHistory()
         this->memoryTotal = m_sysResource.getMemoryTotal();
         memoryAxisY->setRange(0, this->memoryTotal);
     }
-    if(this->cpuHistory.size() >= SYSRESOUCE_SZ)
+    if(this->cpuHistory.size() >= m_sysResourceSize)
     {
         if(!isWarn)
         {
-            mylogger->warn("cpu history and memory history exceeded the limit. exec pop_front...");
+            mylogger->trace("cpu history and memory history exceeded the limit. exec pop_front...");
             isWarn = true;
         }
         this->cpuHistory.pop_front();

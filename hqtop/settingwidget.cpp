@@ -65,6 +65,7 @@ void SettingWidget::on_DueDateComboBox_currentTextChanged(const QString &arg1)
     if(interval_time != this->m_interval_time)
     {
         this->m_newInterval_time = interval_time;
+        ui->applyPushButton->setEnabled(true);
     }
     else
     {
