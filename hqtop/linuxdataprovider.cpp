@@ -252,14 +252,20 @@ SystemResource* LinuxDataProvider::getSystemResource()
 // 杀死进程
 bool LinuxDataProvider::killProcess(qint64 pid)
 {
-    QString command = QString("kill -9 %1").arg(pid);
-
-    system(command.toLocal8Bit().data());
-
-    QString str = "Process " + QString::number(pid) + " was killed!";
-    mylogger->warn(str.toStdString());
-
-    return false;
+    if(pid > 1000)
+    {
+        QString command = QString("kill -9 %1").arg(pid);
+        system(command.toLocal8Bit().data());
+        QString str = "Process " + QString::number(pid) + " was killed!";
+        mylogger->warn(str.toStdString());
+        return true;
+    }
+    else
+    {
+        QString str = "The system process cannot be killed!";
+        mylogger->warn(str.toStdString());
+        return false;
+    }
 }
 
 // 获取进程列表
