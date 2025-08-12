@@ -57,8 +57,7 @@ windows 平台
 <img width="1461" height="515" alt="image" src="https://github.com/user-attachments/assets/bf53e05e-d059-4056-a058-c104fdfabd3e" />
 
 与系统任务管理器对比效果
-<img width="1592" height="944" alt="image" src="https://github.com/user-attachments/assets/71dd11b8-8b23-4211-9e29-58793088867c" />
-
+<img width="1389" height="1228" alt="image" src="https://github.com/user-attachments/assets/bf3036e5-5ba1-4976-8bfb-b26235b33485" />
 
 ------
 Linux平台
