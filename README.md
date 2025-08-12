@@ -31,7 +31,7 @@ windows 平台
 根据cpu利用率排序
 <img width="1642" height="1302" alt="image" src="https://github.com/user-attachments/assets/eeb3a662-b786-4e8d-8cbb-3a1b432e1b41" />
 
-根据内存使用率排序
+根据内存使用量排序
 <img width="1642" height="1302" alt="image" src="https://github.com/user-attachments/assets/2e3e1f18-7d68-4268-acbf-9cddaea0c5a8" />
 
 资源总览页面
@@ -55,3 +55,56 @@ windows 平台
 
 运行时占用系统资源量极少
 <img width="1461" height="515" alt="image" src="https://github.com/user-attachments/assets/bf53e05e-d059-4056-a058-c104fdfabd3e" />
+
+与系统任务管理器对比效果
+<img width="1592" height="944" alt="image" src="https://github.com/user-attachments/assets/71dd11b8-8b23-4211-9e29-58793088867c" />
+
+
+------
+Linux平台
+运行效果
+<img width="919" height="791" alt="image" src="https://github.com/user-attachments/assets/4f36f54b-d125-456a-af5f-a8fec8aa22f1" />
+
+筛选效果1
+<img width="962" height="803" alt="image" src="https://github.com/user-attachments/assets/4fca3029-0b4a-40a5-a607-95ba362487f6" />
+
+筛选效果2
+<img width="926" height="810" alt="image" src="https://github.com/user-attachments/assets/752d1727-bb7d-4a5e-b52e-4d808e729932" />
+
+筛选效果3
+<img width="891" height="798" alt="image" src="https://github.com/user-attachments/assets/fa0fad29-0058-40a5-b4dc-92f4684f6671" />
+
+筛选效果4
+<img width="868" height="835" alt="image" src="https://github.com/user-attachments/assets/ea6dbb0b-54c3-43da-a701-cc5d0555b097" />
+
+根据cpu利用率排序
+<img width="908" height="810" alt="image" src="https://github.com/user-attachments/assets/d4a0f6a7-3551-4cdd-beb4-3d5adab6e2d3" />
+
+根据内存使用量排序
+<img width="882" height="786" alt="image" src="https://github.com/user-attachments/assets/a70f29fd-f92b-421b-aee7-6c455dc4133a" />
+
+资源总览界面
+<img width="857" height="697" alt="image" src="https://github.com/user-attachments/assets/a03ec37f-0767-4ec1-9a8d-df8eac6d9515" />
+
+设置界面
+<img width="670" height="430" alt="image" src="https://github.com/user-attachments/assets/79564f99-a300-4c34-acc1-28a2cc95bf88" />
+
+夜间模式效果
+<img width="853" height="774" alt="image" src="https://github.com/user-attachments/assets/a3a07c1e-6898-40d9-90eb-619c4c287799" />
+
+进程占用过高警告
+<img width="857" height="777" alt="image" src="https://github.com/user-attachments/assets/847f2529-989d-4eb1-9a25-11bcd3c96b4c" />
+
+选中进程并杀死
+<img width="854" height="785" alt="image" src="https://github.com/user-attachments/assets/ef4c6efa-3400-4ad0-ae14-0b47782a2902" />
+<img width="430" height="156" alt="image" src="https://github.com/user-attachments/assets/1174e00b-92c5-4355-b6a9-8ad0fd0a7534" />
+<img width="404" height="92" alt="image" src="https://github.com/user-attachments/assets/42a10010-187f-4352-bacb-c4ffcfc4a307" />
+
+日志展示
+<img width="1525" height="275" alt="image" src="https://github.com/user-attachments/assets/758732f5-c536-47f0-8d89-281009cb24e6" />
+
+运行时系统资源占用极少
+<img width="850" height="434" alt="image" src="https://github.com/user-attachments/assets/a6a83bc2-ae50-4b7f-9584-19178758ce6e" />
+
+与htop开源工具对比效果，差距较小
+<img width="712" height="431" alt="image" src="https://github.com/user-attachments/assets/8f44fb80-28b2-4b39-be0a-45d09ede35c9" />
